@@ -10,8 +10,18 @@ const route = useRoute()
 const router = useRouter()
 const appStore = useAppStore()
 const userStore = useUserStore()
+const roleMap = { admin: '管理员', operator: '操作员', viewer: '查看者' }
+const roleTagType = { admin: 'danger', operator: 'warning', viewer: 'info' }
 
 const isCollapsed = computed(() => appStore.sidebar.collapsed)
+const displayName = computed(() => userStore.nickname || userStore.username || '未命名用户')
+const roleLabel = computed(() => roleMap[userStore.role] || userStore.role || '未分配角色')
+const roleType = computed(() => roleTagType[userStore.role] || 'info')
+const avatarUrl = computed(() => userStore.avatar || '')
+const avatarText = computed(() => {
+  const source = displayName.value.trim()
+  return source ? source.slice(0, 1).toUpperCase() : 'U'
+})
 
 const breadcrumbs = computed(() => {
   return route.matched
@@ -65,9 +75,18 @@ const handleCommand = (command) => {
       <el-dropdown trigger="click" @command="handleCommand">
         <div class="user-info">
           <div class="user-avatar">
-            <el-icon :size="16"><UserFilled /></el-icon>
+            <img v-if="avatarUrl" :src="avatarUrl" :alt="`${displayName}头像`" class="avatar-image" />
+            <template v-else>
+              <span class="avatar-text">{{ avatarText }}</span>
+              <el-icon :size="16" class="avatar-icon"><UserFilled /></el-icon>
+            </template>
           </div>
-          <span class="nickname">{{ userStore.nickname }}</span>
+          <div class="user-meta">
+            <span class="nickname">{{ displayName }}</span>
+            <el-tag :type="roleType" size="small" effect="light" round>
+              {{ roleLabel }}
+            </el-tag>
+          </div>
         </div>
         <template #dropdown>
           <el-dropdown-menu>
@@ -169,13 +188,15 @@ const handleCommand = (command) => {
     display: flex;
     align-items: center;
     cursor: pointer;
+    gap: 10px;
     padding: 6px 12px;
-    border-radius: 8px;
+    border-radius: 12px;
     transition: all 0.2s ease;
 
     .user-avatar {
-      width: 32px;
-      height: 32px;
+      position: relative;
+      width: 38px;
+      height: 38px;
       border-radius: 50%;
       background: linear-gradient(135deg, #165DFF, #4080FF);
       display: flex;
@@ -183,13 +204,62 @@ const handleCommand = (command) => {
       justify-content: center;
       color: #ffffff;
       flex-shrink: 0;
+      overflow: hidden;
+      box-shadow: 0 8px 18px rgba(22, 93, 255, 0.2);
+
+      .avatar-image {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+      }
+
+      .avatar-text {
+        position: absolute;
+        z-index: 1;
+        font-size: 14px;
+        font-weight: 700;
+        letter-spacing: 0.02em;
+      }
+
+      .avatar-icon {
+        position: absolute;
+        right: -2px;
+        bottom: -1px;
+        width: 18px;
+        height: 18px;
+        border-radius: 50%;
+        background: rgba(12, 22, 44, 0.22);
+        backdrop-filter: blur(6px);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        border: 1px solid rgba(255, 255, 255, 0.4);
+      }
     }
 
-    .nickname {
-      margin-left: 8px;
-      font-size: 14px;
-      font-weight: 500;
-      color: var(--text-primary);
+    .user-meta {
+      display: flex;
+      flex-direction: column;
+      align-items: flex-start;
+      gap: 4px;
+      min-width: 0;
+
+      .nickname {
+        max-width: 140px;
+        font-size: 14px;
+        font-weight: 600;
+        line-height: 1;
+        color: var(--text-primary);
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+      }
+
+      :deep(.el-tag) {
+        margin: 0;
+        border: none;
+        font-weight: 500;
+      }
     }
 
     &:hover {

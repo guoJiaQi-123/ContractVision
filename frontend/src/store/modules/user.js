@@ -6,6 +6,7 @@ import router from '@/router'
 
 export const useUserStore = defineStore('user', {
   state: () => ({
+    avatar: '',
     username: '',
     nickname: '',
     roles: [],
@@ -27,6 +28,7 @@ export const useUserStore = defineStore('user', {
     async getUserInfoAction() {
       const res = await getProfile()
       const data = res.data
+      this.avatar = data.avatar || data.avatar_url || data.profile_avatar || ''
       this.username = data.username || ''
       this.nickname = data.nickname || data.username || ''
       this.email = data.email || ''
@@ -43,6 +45,7 @@ export const useUserStore = defineStore('user', {
     },
 
     resetState() {
+      this.avatar = ''
       this.username = ''
       this.nickname = ''
       this.roles = []
