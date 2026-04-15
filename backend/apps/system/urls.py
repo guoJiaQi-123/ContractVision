@@ -11,6 +11,7 @@ router.register('v1/system/integrations', IntegrationConfigViewSet, basename='in
 router.register('v1/system/data-permissions', config_views.DataPermissionRuleViewSet, basename='data-permission-rule')
 router.register('v1/system/alert-rules', config_views.AlertRuleViewSet, basename='alert-rule')
 router.register('v1/system/alerts', config_views.AlertMessageViewSet, basename='alert-message')
+router.register('v1/system/alert-workspace', config_views.AlertWorkspaceViewSet, basename='alert-workspace')
 router.register('v1/system/sales-targets', config_views.SalesTargetViewSet, basename='sales-target')
 router.register('v1/system/dashboards', config_views.DashboardConfigViewSet, basename='dashboard-config')
 router.register('v1/system/templates', config_views.DataTemplateViewSet, basename='data-template')
@@ -22,6 +23,8 @@ urlpatterns = [
     path('v1/system/backup/create/', BackupCreateView.as_view(), name='backup-create'),
     path('v1/system/backup/restore/', BackupRestoreView.as_view(), name='backup-restore'),
     path('v1/system/backup/delete/', BackupDeleteView.as_view(), name='backup-delete'),
+    path('v1/system/alert-center/', config_views.AlertCenterView.as_view(), name='alert-center'),
+    path('v1/system/alert-center/<int:pk>/process/', config_views.AlertCenterProcessView.as_view(), name='alert-center-process'),
     path('v1/system/mobile-dashboard/', config_views.MobileDashboardView.as_view(), name='mobile-dashboard'),
     path('', include(router.urls)),
 ]

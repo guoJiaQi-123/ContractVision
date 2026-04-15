@@ -7,7 +7,10 @@ from reportlab.lib import colors
 from reportlab.lib.pagesizes import A4
 from reportlab.lib.styles import ParagraphStyle, getSampleStyleSheet
 from reportlab.lib.units import mm
+from reportlab.pdfbase import pdfmetrics
+from reportlab.pdfbase.cidfonts import UnicodeCIDFont
 from reportlab.platypus import Paragraph, SimpleDocTemplate, Table, TableStyle
+from xml.sax.saxutils import escape
 
 
 def export_to_excel(data, columns, filename=None):
@@ -59,6 +62,15 @@ def export_to_pdf(data, columns, title='', filename=None):
     if filename is None:
         filename = f'export_{datetime.now().strftime("%Y%m%d_%H%M%S")}.pdf'
 
+    # Ensure Chinese characters render correctly.
+    # ReportLab default fonts (Helvetica, Times-Roman) do not support CJK glyphs.
+    # Unicode CID fonts are built-in and avoid bundling TTF files.
+    cjk_font_name = 'STSong-Light'
+    try:
+        pdfmetrics.getFont(cjk_font_name)
+    except KeyError:
+        pdfmetrics.registerFont(UnicodeCIDFont(cjk_font_name))
+
     buffer = io.BytesIO()
     doc = SimpleDocTemplate(buffer, pagesize=A4, topMargin=20 * mm, bottomMargin=20 * mm)
 
@@ -66,18 +78,36 @@ def export_to_pdf(data, columns, title='', filename=None):
     title_style = ParagraphStyle(
         'CustomTitle',
         parent=styles['Title'],
+        fontName=cjk_font_name,
         fontSize=16,
         spaceAfter=20,
+    )
+    cell_style = ParagraphStyle(
+        'CJKCell',
+        parent=styles['BodyText'],
+        fontName=cjk_font_name,
+        fontSize=9,
+        leading=11,
+    )
+    header_style = ParagraphStyle(
+        'CJKHeader',
+        parent=styles['BodyText'],
+        fontName=cjk_font_name,
+        fontSize=11,
+        leading=13,
     )
 
     elements = []
 
     if title:
-        elements.append(Paragraph(title, title_style))
+        elements.append(Paragraph(escape(str(title)), title_style))
 
-    table_data = [[col['label'] for col in columns]]
+    def _cell(value, style):
+        return Paragraph(escape(str(value or '')), style)
+
+    table_data = [[_cell(col['label'], header_style) for col in columns]]
     for row in data:
-        table_data.append([str(row.get(col['key'], '')) for col in columns])
+        table_data.append([_cell(row.get(col['key'], ''), cell_style) for col in columns])
 
     col_widths = [col.get('pdf_width', 80) for col in columns]
 
@@ -86,6 +116,8 @@ def export_to_pdf(data, columns, title='', filename=None):
         ('BACKGROUND', (0, 0), (-1, 0), colors.HexColor('#4472C4')),
         ('TEXTCOLOR', (0, 0), (-1, 0), colors.white),
         ('ALIGN', (0, 0), (-1, -1), 'CENTER'),
+        ('VALIGN', (0, 0), (-1, -1), 'MIDDLE'),
+        ('FONTNAME', (0, 0), (-1, -1), cjk_font_name),
         ('FONTSIZE', (0, 0), (-1, 0), 11),
         ('FONTSIZE', (0, 1), (-1, -1), 9),
         ('BOTTOMPADDING', (0, 0), (-1, 0), 10),

@@ -10,6 +10,16 @@ class StandardPagination(PageNumberPagination):
     page_size_query_param = 'size'
     max_page_size = 100
 
+    def get_page_size(self, request):
+        page_size = request.query_params.get(self.page_size_query_param) or request.query_params.get('page_size')
+        if page_size:
+            try:
+                page_size = int(page_size)
+            except (TypeError, ValueError):
+                page_size = self.page_size
+            return min(page_size, self.max_page_size)
+        return self.page_size
+
     def get_paginated_response(self, data):
         return Response(OrderedDict({
             'code': 200,

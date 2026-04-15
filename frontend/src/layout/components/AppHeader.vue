@@ -1,10 +1,12 @@
 <script setup>
-import { computed } from 'vue'
+import { computed, onMounted, ref, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { useAppStore } from '@/store/modules/app'
 import { useUserStore } from '@/store/modules/user'
 import { Fold, Expand, UserFilled, Setting, SwitchButton, Bell } from '@element-plus/icons-vue'
-import { ElMessageBox } from 'element-plus'
+import { ElMessage, ElMessageBox } from 'element-plus'
+import { getAlertCenter, processAlertCenterItem } from '@/api/system'
+import { formatDate } from '@/utils'
 
 const route = useRoute()
 const router = useRouter()
@@ -22,6 +24,14 @@ const avatarText = computed(() => {
   const source = displayName.value.trim()
   return source ? source.slice(0, 1).toUpperCase() : 'U'
 })
+const alertCenter = ref({
+  pending_count: 0,
+  processed_count: 0,
+  level_counts: { high: 0, medium: 0, low: 0 },
+  recent_alerts: []
+})
+const alertLoading = ref(false)
+const processingIds = ref([])
 
 const breadcrumbs = computed(() => {
   return route.matched
@@ -31,6 +41,51 @@ const breadcrumbs = computed(() => {
       path: item.path
     }))
 })
+
+const pendingAlertCount = computed(() => alertCenter.value.pending_count || 0)
+const recentAlerts = computed(() => alertCenter.value.recent_alerts || [])
+const alertShortcutLabel = computed(() => '进入预警台')
+
+const getLevelTagType = (level) => {
+  if (level === 'high') return 'danger'
+  if (level === 'medium') return 'warning'
+  return 'info'
+}
+
+const formatAlertTime = (date) => {
+  return date ? formatDate(date, 'YYYY-MM-DD') : '未设置'
+}
+
+const loadAlertCenter = async () => {
+  alertLoading.value = true
+  try {
+    const res = await getAlertCenter()
+    alertCenter.value = {
+      pending_count: res.data?.pending_count || 0,
+      processed_count: res.data?.processed_count || 0,
+      level_counts: res.data?.level_counts || { high: 0, medium: 0, low: 0 },
+      recent_alerts: res.data?.recent_alerts || []
+    }
+  } finally {
+    alertLoading.value = false
+  }
+}
+
+const handleAlertAction = async (id) => {
+  if (!id || processingIds.value.includes(id)) return
+  processingIds.value = [...processingIds.value, id]
+  try {
+    await processAlertCenterItem(id)
+    ElMessage.success('预警已处理')
+    await loadAlertCenter()
+  } finally {
+    processingIds.value = processingIds.value.filter((item) => item !== id)
+  }
+}
+
+const navigateAlertTarget = () => {
+  router.push('/contract/alerts')
+}
 
 const toggleSidebar = () => {
   appStore.toggleSidebar()
@@ -49,6 +104,14 @@ const handleCommand = (command) => {
     }).catch(() => {})
   }
 }
+
+onMounted(() => {
+  loadAlertCenter()
+})
+
+watch(() => route.fullPath, () => {
+  loadAlertCenter()
+})
 </script>
 
 <template>
@@ -67,11 +130,76 @@ const handleCommand = (command) => {
       </el-breadcrumb>
     </div>
     <div class="header-right">
-      <button class="header-icon-btn">
-        <el-badge :value="0" :hidden="true" type="danger">
-          <el-icon :size="18"><Bell /></el-icon>
-        </el-badge>
-      </button>
+      <el-popover
+        placement="bottom-end"
+        :width="360"
+        trigger="click"
+        popper-class="alert-popover"
+        @show="loadAlertCenter"
+      >
+        <template #reference>
+          <button class="header-icon-btn" :class="{ 'has-alert': pendingAlertCount > 0 }">
+            <el-badge :value="pendingAlertCount" :hidden="pendingAlertCount === 0" type="danger">
+              <el-icon :size="18"><Bell /></el-icon>
+            </el-badge>
+          </button>
+        </template>
+        <div class="alert-panel">
+          <div class="alert-panel-header">
+            <div>
+              <strong>预警中心</strong>
+              <p>实时汇总当前账号待处理事项</p>
+            </div>
+            <el-tag type="danger" effect="light" round>{{ pendingAlertCount }} 条待处理</el-tag>
+          </div>
+          <div class="alert-summary">
+            <div class="summary-item high">
+              <span>高危</span>
+              <strong>{{ alertCenter.level_counts?.high || 0 }}</strong>
+            </div>
+            <div class="summary-item medium">
+              <span>中危</span>
+              <strong>{{ alertCenter.level_counts?.medium || 0 }}</strong>
+            </div>
+            <div class="summary-item low">
+              <span>提示</span>
+              <strong>{{ alertCenter.level_counts?.low || 0 }}</strong>
+            </div>
+          </div>
+          <div v-loading="alertLoading" class="alert-list">
+            <div v-if="recentAlerts.length" class="alert-items">
+              <div v-for="item in recentAlerts" :key="item.id" class="alert-item">
+                <div class="alert-item-main">
+                  <div class="alert-item-title">
+                    <span>{{ item.title }}</span>
+                    <el-tag :type="getLevelTagType(item.level)" effect="light" round size="small">
+                      {{ item.level === 'high' ? '高危' : item.level === 'medium' ? '中危' : '提示' }}
+                    </el-tag>
+                  </div>
+                  <p>{{ item.content || '请尽快跟进该预警事项。' }}</p>
+                  <div class="alert-item-meta">
+                    <span>合同：{{ item.contract_no || '通用事项' }}</span>
+                    <span>截止：{{ formatAlertTime(item.due_date) }}</span>
+                  </div>
+                </div>
+                <el-button
+                  type="primary"
+                  link
+                  :loading="processingIds.includes(item.id)"
+                  @click="handleAlertAction(item.id)"
+                >
+                  处理
+                </el-button>
+              </div>
+            </div>
+            <el-empty v-else description="暂无待处理预警" :image-size="72" />
+          </div>
+          <div class="alert-panel-footer">
+            <span>已处理 {{ alertCenter.processed_count || 0 }} 条历史预警</span>
+            <el-button type="primary" link @click="navigateAlertTarget">{{ alertShortcutLabel }}</el-button>
+          </div>
+        </div>
+      </el-popover>
       <el-dropdown trigger="click" @command="handleCommand">
         <div class="user-info">
           <div class="user-avatar">
@@ -182,6 +310,11 @@ const handleCommand = (command) => {
       background: var(--bg-color);
       color: var(--primary-color);
     }
+
+    &.has-alert {
+      color: var(--primary-color);
+      background: rgba(22, 93, 255, 0.08);
+    }
   }
 
   .user-info {
@@ -279,5 +412,136 @@ const handleCommand = (command) => {
     background: var(--primary-bg);
     color: var(--primary-color);
   }
+}
+
+:deep(.alert-popover) {
+  padding: 0 !important;
+  border-radius: 18px !important;
+  overflow: hidden;
+}
+
+.alert-panel {
+  padding: 16px;
+}
+
+.alert-panel-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 12px;
+
+  strong {
+    display: block;
+    color: var(--text-primary);
+    font-size: 15px;
+  }
+
+  p {
+    margin: 4px 0 0;
+    color: var(--text-muted);
+    font-size: 12px;
+  }
+}
+
+.alert-summary {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 10px;
+  margin-bottom: 12px;
+}
+
+.summary-item {
+  padding: 10px 12px;
+  border-radius: 14px;
+  background: var(--bg-color);
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+
+  span {
+    color: var(--text-muted);
+    font-size: 12px;
+  }
+
+  strong {
+    color: var(--text-primary);
+    font-size: 18px;
+    line-height: 1;
+  }
+
+  &.high {
+    background: rgba(245, 108, 108, 0.08);
+  }
+
+  &.medium {
+    background: rgba(230, 162, 60, 0.08);
+  }
+
+  &.low {
+    background: rgba(64, 158, 255, 0.08);
+  }
+}
+
+.alert-list {
+  min-height: 120px;
+}
+
+.alert-items {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.alert-item {
+  display: flex;
+  gap: 8px;
+  justify-content: space-between;
+  padding: 12px;
+  border-radius: 14px;
+  background: var(--bg-color);
+  border: 1px solid rgba(148, 163, 184, 0.14);
+}
+
+.alert-item-main {
+  min-width: 0;
+  flex: 1;
+
+  p {
+    margin: 6px 0;
+    color: var(--text-secondary);
+    font-size: 12px;
+    line-height: 1.5;
+  }
+}
+
+.alert-item-title {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  color: var(--text-primary);
+  font-size: 13px;
+  font-weight: 600;
+}
+
+.alert-item-meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  color: var(--text-muted);
+  font-size: 12px;
+}
+
+.alert-panel-footer {
+  margin-top: 12px;
+  padding-top: 12px;
+  border-top: 1px solid var(--border-color);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  color: var(--text-muted);
+  font-size: 12px;
 }
 </style>

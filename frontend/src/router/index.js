@@ -76,6 +76,12 @@ const routes = [
             name: 'ContractLifecycle',
             component: () => import('@/views/contract/lifecycle.vue'),
             meta: { title: '履约中心', icon: 'Finished' }
+          },
+          {
+            path: '/contract/alerts',
+            name: 'ContractAlerts',
+            component: () => import('@/views/contract/alerts.vue'),
+            meta: { title: '预警工作台', icon: 'Bell' }
           }
         ]
       },

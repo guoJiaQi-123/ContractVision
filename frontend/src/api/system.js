@@ -80,6 +80,14 @@ export function updateAlertRule(id, data) {
   return request.put(`/api/v1/system/alert-rules/${id}/`, data)
 }
 
+export function getAlertRuleStrategyOptions() {
+  return request.get('/api/v1/system/alert-rules/strategy_options/')
+}
+
+export function getAlertRulePreviewImpact(params) {
+  return request.get('/api/v1/system/alert-rules/preview_impact/', { params })
+}
+
 export function getAlerts(params) {
   return request.get('/api/v1/system/alerts/', { params })
 }
@@ -88,8 +96,56 @@ export function scanAlerts() {
   return request.post('/api/v1/system/alerts/scan/')
 }
 
+export function getAlertScanPreview(params) {
+  return request.get('/api/v1/system/alerts/scan_preview/', { params })
+}
+
+export function exportAlertScanPreview(params) {
+  return request.get('/api/v1/system/alerts/scan_preview_export/', { params, responseType: 'blob' })
+}
+
+export function getAlertScanSummary(params) {
+  return request.get('/api/v1/system/alerts/scan_summary/', { params })
+}
+
 export function processAlert(id) {
   return request.post(`/api/v1/system/alerts/${id}/process/`)
+}
+
+export function getAlertCenter() {
+  return request.get('/api/v1/system/alert-center/')
+}
+
+export function processAlertCenterItem(id) {
+  return request.post(`/api/v1/system/alert-center/${id}/process/`)
+}
+
+export function getAlertWorkspace(params) {
+  return request.get('/api/v1/system/alert-workspace/', { params })
+}
+
+export function getAlertWorkspaceDetail(id) {
+  return request.get(`/api/v1/system/alert-workspace/${id}/`)
+}
+
+export function getAlertWorkspaceSummary() {
+  return request.get('/api/v1/system/alert-workspace/summary/')
+}
+
+export function getAlertWorkspaceAssignees(params) {
+  return request.get('/api/v1/system/alert-workspace/assignees/', { params })
+}
+
+export function processAlertWorkspaceItem(id) {
+  return request.post(`/api/v1/system/alert-workspace/${id}/process/`)
+}
+
+export function processAlertWorkspaceBatch(data) {
+  return request.post('/api/v1/system/alert-workspace/batch_process/', data)
+}
+
+export function reassignAlertWorkspaceItem(id, data) {
+  return request.post(`/api/v1/system/alert-workspace/${id}/reassign/`, data)
 }
 
 export function getSalesTargets(params) {

@@ -160,7 +160,9 @@ const handleImportUpload = async (params) => {
 const handleDownloadTemplate = async () => {
   try {
     const res = await downloadImportTemplate()
-    const blob = new Blob([res], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' })
+    const blob = res instanceof Blob
+      ? res
+      : new Blob([res], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' })
     const link = document.createElement('a')
     link.href = URL.createObjectURL(blob)
     link.download = 'contract_import_template.xlsx'
@@ -187,7 +189,7 @@ const handleExport = async (format) => {
       filename = 'contracts.xlsx'
     }
     
-    const blob = new Blob([res])
+    const blob = res instanceof Blob ? res : new Blob([res])
     const link = document.createElement('a')
     link.href = URL.createObjectURL(blob)
     link.download = filename

@@ -46,7 +46,7 @@ const handleExport = async (format) => {
       format,
       report_data: reportData.value
     })
-    const blob = new Blob([res])
+    const blob = res instanceof Blob ? res : new Blob([res])
     const link = document.createElement('a')
     const ext = format === 'pdf' ? 'pdf' : 'xlsx'
     link.href = URL.createObjectURL(blob)

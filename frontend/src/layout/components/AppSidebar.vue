@@ -3,7 +3,7 @@ import { computed } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { useAppStore } from '@/store/modules/app'
 import { useUserStore } from '@/store/modules/user'
-import { TrendCharts, Document, DataLine, User, Setting, HomeFilled, DataAnalysis, Location, Notebook, Tickets, MagicStick, FolderOpened, Connection, Finished, Monitor, Operation, SetUp, Cellphone } from '@element-plus/icons-vue'
+import { TrendCharts, Document, DataLine, User, Setting, HomeFilled, DataAnalysis, Location, Notebook, Tickets, MagicStick, FolderOpened, Connection, Finished, Monitor, Operation, SetUp, Cellphone, Bell } from '@element-plus/icons-vue'
 
 const route = useRoute()
 const router = useRouter()
@@ -22,7 +22,8 @@ const menuList = [
     icon: Document,
     children: [
       { path: '/contract/list', title: '合同列表' },
-      { path: '/contract/lifecycle', title: '履约中心', icon: Finished }
+      { path: '/contract/lifecycle', title: '履约中心', icon: Finished },
+      { path: '/contract/alerts', title: '预警工作台', icon: Bell }
     ]
   },
   {

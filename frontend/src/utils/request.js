@@ -2,6 +2,17 @@ import axios from 'axios'
 import { ElMessage } from 'element-plus'
 import { getToken, clearAuth } from '@/utils/auth'
 
+async function tryParseBlobError(blob) {
+  if (!(blob instanceof Blob)) return null
+  try {
+    const text = await blob.text()
+    if (!text) return null
+    return JSON.parse(text)
+  } catch {
+    return null
+  }
+}
+
 const service = axios.create({
   baseURL: import.meta.env.VITE_API_BASE_URL || '',
   timeout: 15000
@@ -24,6 +35,13 @@ let isRedirecting = false
 
 service.interceptors.response.use(
   (response) => {
+    // For file downloads (excel/pdf/csv/etc.), backend returns raw bytes rather than {code,data}.
+    // Do NOT apply the JSON envelope check, otherwise all downloads will be rejected.
+    const responseType = response?.config?.responseType
+    if (responseType === 'blob' || responseType === 'arraybuffer') {
+      return response.data
+    }
+
     const res = response.data
     if (res.code !== 200) {
       ElMessage.error(res.message || '请求失败')
@@ -38,10 +56,13 @@ service.interceptors.response.use(
     }
     return res
   },
-  (error) => {
+  async (error) => {
     const response = error.response
+    const blobJson = response?.data instanceof Blob ? await tryParseBlobError(response.data) : null
+    const responseData = blobJson || response?.data
+
     if (response && response.status === 401) {
-      const message = response.data?.message || '认证失败，请重新登录'
+      const message = responseData?.message || '认证失败，请重新登录'
       ElMessage.warning(message)
       clearAuth()
       if (!isRedirecting) {
@@ -49,12 +70,11 @@ service.interceptors.response.use(
         window.location.href = '/login'
       }
     } else if (response && response.status === 400) {
-      const resData = response.data
-      const firstFieldError = resData?.data ? Object.values(resData.data)[0] : null
-      const message = firstFieldError || resData?.message || '请求参数错误'
+      const firstFieldError = responseData?.data ? Object.values(responseData.data)[0] : null
+      const message = firstFieldError || responseData?.message || '请求参数错误'
       ElMessage.error(message)
     } else {
-      ElMessage.error(response?.data?.message || '网络错误，请稍后重试')
+      ElMessage.error(responseData?.message || '网络错误，请稍后重试')
     }
     return Promise.reject(error)
   }
