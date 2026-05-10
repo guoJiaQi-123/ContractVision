@@ -12,7 +12,7 @@ import {
 import VChart from 'vue-echarts'
 import { getDashboardStats, getContractTrend, getStatusDistribution, getRegionDistribution } from '@/api/analytics'
 import { getContractList } from '@/api/contract'
-import { TrendCharts, Document, Warning, CircleCheck, ArrowUp, ArrowDown, View } from '@element-plus/icons-vue'
+import { TrendCharts, Document, Warning, CircleCheck, View } from '@element-plus/icons-vue'
 
 use([
   CanvasRenderer,
@@ -37,6 +37,7 @@ const statusOption = ref({})
 const regionOption = ref({})
 const overdueList = ref([])
 const overdueError = ref(false)
+const trendMonths = ref(6)
 
 const loading = ref({
   stats: true,
@@ -106,16 +107,18 @@ const loadStats = async () => {
   }
 }
 
-const loadTrend = async () => {
+const loadTrend = async (months) => {
+  loading.value.trend = true
   try {
-    const res = await getContractTrend()
+    const res = await getContractTrend({ months })
     const data = res.data
     trendOption.value = {
       tooltip: { trigger: 'axis' },
-      grid: { left: '3%', right: '4%', bottom: '3%', containLabel: true },
+      legend: { data: ['实际金额', '目标金额'], bottom: 0 },
+      grid: { left: '3%', right: '4%', bottom: '12%', top: '8%', containLabel: true },
       xAxis: {
         type: 'category',
-        data: data.months || [],
+        data: data.labels || [],
         axisLine: { lineStyle: { color: '#F2F3F5' } },
         axisLabel: { color: '#86909C' }
       },
@@ -156,6 +159,11 @@ const loadTrend = async () => {
   }
 }
 
+const switchTrendMonths = (months) => {
+  trendMonths.value = months
+  loadTrend(months)
+}
+
 const loadStatus = async () => {
   try {
     const res = await getStatusDistribution()
@@ -183,7 +191,7 @@ const loadStatus = async () => {
           }
         }
       ],
-      color: ['#165DFF', '#FF7D00', '#F53F3F', '#00B42A']
+      color: ['#165DFF', '#FF7D00', '#F53F3F', '#00B42A', '#86909C']
     }
   } catch {
     statusOption.value = {}
@@ -240,7 +248,7 @@ const loadRegion = async () => {
 
 const loadOverdue = async () => {
   try {
-    const res = await getContractList({ payment_status: 'overdue', page_size: 5 })
+    const res = await getContractList({ has_overdue: 'true', page_size: 5 })
     overdueList.value = res.data?.results || res.data || []
     overdueError.value = false
   } catch {
@@ -253,7 +261,7 @@ const loadOverdue = async () => {
 
 onMounted(() => {
   loadStats()
-  loadTrend()
+  loadTrend(trendMonths.value)
   loadStatus()
   loadRegion()
   loadOverdue()
@@ -299,8 +307,8 @@ onMounted(() => {
           <div class="card-header">
             <h3>月度合同金额趋势</h3>
             <div class="card-actions">
-              <el-button size="small" type="primary" plain>近6个月</el-button>
-              <el-button size="small" plain>近12个月</el-button>
+              <el-button size="small" :type="trendMonths === 6 ? 'primary' : ''" plain @click="switchTrendMonths(6)">近6个月</el-button>
+              <el-button size="small" :type="trendMonths === 12 ? 'primary' : ''" plain @click="switchTrendMonths(12)">近12个月</el-button>
             </div>
           </div>
           <div v-if="loading.trend" class="chart-skeleton">
@@ -315,7 +323,7 @@ onMounted(() => {
       <el-col :xs="24" :lg="12">
         <div class="card chart-card">
           <div class="card-header">
-            <h3>合同类型占比</h3>
+            <h3>合同状态分布</h3>
           </div>
           <div v-if="loading.status" class="chart-skeleton">
             <div class="skeleton-circle"></div>
@@ -330,7 +338,7 @@ onMounted(() => {
       <el-col :span="24">
         <div class="card chart-card">
           <div class="card-header">
-            <h3>部门业绩排名</h3>
+            <h3>区域签约金额排名</h3>
           </div>
           <div v-if="loading.region" class="chart-skeleton">
             <div class="skeleton-bar-group">
@@ -358,9 +366,9 @@ onMounted(() => {
       </div>
       <el-empty v-else-if="overdueError || overdueList.length === 0" description="暂无逾期合同" />
       <el-table v-else :data="overdueList" class="alert-table">
-        <el-table-column prop="contract_number" label="合同编号" min-width="140">
+        <el-table-column prop="contract_no" label="合同编号" min-width="140">
           <template #default="{ row }">
-            <router-link :to="`/contract/${row.id}`" class="contract-link">{{ row.contract_number }}</router-link>
+            <router-link :to="`/contract/${row.id}`" class="contract-link">{{ row.contract_no }}</router-link>
           </template>
         </el-table-column>
         <el-table-column prop="client_name" label="客户名称" min-width="180" />

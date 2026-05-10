@@ -38,12 +38,6 @@ const routes = [
         meta: { title: '首页概览', icon: 'Odometer' }
       },
       {
-        path: '/dashboard/mobile',
-        name: 'DashboardMobile',
-        component: () => import('@/views/dashboard/mobile.vue'),
-        meta: { title: '移动驾驶舱', icon: 'Cellphone' }
-      },
-      {
         path: '/contract',
         redirect: '/contract/list',
         children: [
@@ -124,6 +118,12 @@ const routes = [
             name: 'AnalyticsManagement',
             component: () => import('@/views/analytics/management.vue'),
             meta: { title: '经营驾驶舱', icon: 'Monitor' }
+          },
+          {
+            path: '/analytics/mobile',
+            name: 'AnalyticsMobile',
+            component: () => import('@/views/analytics/mobile.vue'),
+            meta: { title: '移动驾驶舱', icon: 'Cellphone' }
           }
         ]
       },
@@ -167,6 +167,31 @@ const routes = [
             name: 'SystemConfigCenter',
             component: () => import('@/views/system/config-center.vue'),
             meta: { title: '模板与汇率', icon: 'SetUp' }
+          }
+        ]
+      },
+      {
+        path: '/enterprise',
+        redirect: '/enterprise/department',
+        meta: { roles: ['admin'] },
+        children: [
+          {
+            path: '/enterprise/department',
+            name: 'EnterpriseDepartment',
+            component: () => import('@/views/enterprise/department.vue'),
+            meta: { title: '部门管理', icon: 'OfficeBuilding' }
+          },
+          {
+            path: '/enterprise/product-type',
+            name: 'EnterpriseProductType',
+            component: () => import('@/views/enterprise/product-type.vue'),
+            meta: { title: '产品类型管理', icon: 'Goods' }
+          },
+          {
+            path: '/enterprise/customer',
+            name: 'EnterpriseCustomer',
+            component: () => import('@/views/enterprise/customer.vue'),
+            meta: { title: '客户管理', icon: 'UserFilled' }
           }
         ]
       },

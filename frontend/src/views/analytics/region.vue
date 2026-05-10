@@ -6,7 +6,7 @@ import { BarChart, PieChart } from 'echarts/charts'
 import { TitleComponent, TooltipComponent, LegendComponent, GridComponent } from 'echarts/components'
 import VChart from 'vue-echarts'
 import { getRegionDistribution } from '@/api/analytics'
-
+import DESIGN_COLORS from '@/utils/colors'
 use([CanvasRenderer, BarChart, PieChart, TitleComponent, TooltipComponent, LegendComponent, GridComponent])
 
 const currentYear = new Date().getFullYear()
@@ -76,8 +76,8 @@ const loadOverview = async () => {
               type: 'linear',
               x: 0, y: 0, x2: 0, y2: 1,
               colorStops: [
-                { offset: 0, color: '#165DFF' },
-                { offset: 1, color: '#4080FF' }
+                { offset: 0, color: DESIGN_COLORS.primary },
+                { offset: 1, color: DESIGN_COLORS.primaryLight }
               ]
             },
             borderRadius: [6, 6, 0, 0]
@@ -90,7 +90,7 @@ const loadOverview = async () => {
                 x: 0, y: 0, x2: 0, y2: 1,
                 colorStops: [
                   { offset: 0, color: '#0E42D2' },
-                  { offset: 1, color: '#165DFF' }
+                  { offset: 1, color: DESIGN_COLORS.primary }
                 ]
               }
             }
@@ -153,8 +153,8 @@ const loadBar = async () => {
               type: 'linear',
               x: 0, y: 0, x2: 1, y2: 0,
               colorStops: [
-                { offset: 0, color: '#4080FF' },
-                { offset: 1, color: '#165DFF' }
+                { offset: 0, color: DESIGN_COLORS.primaryLight },
+                { offset: 1, color: DESIGN_COLORS.primary }
               ]
             },
             borderRadius: [0, 4, 4, 0]
@@ -217,7 +217,7 @@ const loadPie = async () => {
           }
         }
       ],
-      color: ['#165DFF', '#00B42A', '#FF7D00', '#F53F3F', '#722ED1', '#0FC6C2', '#F77234', '#3491FA']
+      color: [DESIGN_COLORS.primary, DESIGN_COLORS.success, DESIGN_COLORS.warning, DESIGN_COLORS.danger, DESIGN_COLORS.secondary1, DESIGN_COLORS.secondary2, DESIGN_COLORS.warningLight, DESIGN_COLORS.primaryLight]
     }
   } catch {
     pieEmpty.value = true
@@ -299,7 +299,7 @@ onMounted(() => {
   margin-bottom: 24px;
 
   h1 {
-    font-size: 24px;
+    font-size: var(--fs-xl);
     font-weight: 600;
     color: var(--text-primary);
   }
@@ -308,23 +308,25 @@ onMounted(() => {
 .card {
   background: var(--card-bg);
   border: 1px solid var(--border-color);
-  border-radius: 12px;
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-xs);
 }
 
 .chart-card {
   padding: 20px;
   margin-bottom: 16px;
-  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  transition: box-shadow var(--transition-normal), border-color var(--transition-normal);
 
   &:hover {
-    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.06);
+    box-shadow: var(--shadow-sm);
+    border-color: var(--border-light);
   }
 
   .card-header {
     margin-bottom: 16px;
 
     h3 {
-      font-size: 16px;
+      font-size: var(--fs-md);
       font-weight: 600;
       color: var(--text-primary);
     }

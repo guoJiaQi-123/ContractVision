@@ -49,15 +49,15 @@ const fetchData = async () => {
       page: queryParams.page,
       page_size: queryParams.page_size
     }
-    if (queryParams.keyword) params.keyword = queryParams.keyword
+    if (queryParams.keyword) params.search = queryParams.keyword
     if (queryParams.status) params.status = queryParams.status
     if (dateRange.value && dateRange.value.length === 2) {
-      params.start_date = dateRange.value[0]
-      params.end_date = dateRange.value[1]
+      params.sign_date_from = dateRange.value[0]
+      params.sign_date_to = dateRange.value[1]
     }
     const res = await getContractList(params)
-    tableData.value = res.results || res.data?.results || []
-    total.value = res.count || res.data?.count || 0
+    tableData.value = res.data?.results || res.results || []
+    total.value = res.data?.total ?? res.total ?? 0
   } catch {
     tableData.value = []
     total.value = 0
@@ -176,7 +176,7 @@ const handleDownloadTemplate = async () => {
 const handleExport = async (format) => {
   try {
     const params = {}
-    if (queryParams.keyword) params.keyword = queryParams.keyword
+    if (queryParams.keyword) params.search = queryParams.keyword
     if (queryParams.status) params.status = queryParams.status
     
     let res
@@ -406,75 +406,153 @@ onMounted(fetchData)
   margin-bottom: 24px;
 
   .header-info {
-    h1 { font-size: 24px; font-weight: 700; color: var(--text-primary); margin: 0; }
-    .subtitle { margin: 6px 0 0; font-size: 14px; color: var(--text-muted); }
+    h1 {
+      font-size: var(--fs-xl);
+      font-weight: 700;
+      color: var(--text-primary);
+      margin: 0;
+    }
+    .subtitle {
+      margin: 6px 0 0;
+      font-size: var(--fs-sm);
+      color: var(--text-muted);
+    }
   }
 
-  .header-actions { display: flex; gap: 12px; }
+  .header-actions {
+    display: flex;
+    gap: 12px;
+  }
 }
 
 .filter-card {
   background: var(--card-bg);
   border: 1px solid var(--border-color);
-  border-radius: 12px;
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-xs);
   padding: 20px;
   margin-bottom: 16px;
 
-  .filter-actions { display: flex; gap: 8px; }
+  .filter-actions {
+    display: flex;
+    gap: 8px;
+  }
 }
 
 .search-input {
   position: relative;
+
   .search-icon {
-    position: absolute; left: 12px; top: 50%; transform: translateY(-50%);
-    color: var(--text-muted); z-index: 1;
+    position: absolute;
+    left: 12px;
+    top: 50%;
+    transform: translateY(-50%);
+    color: var(--text-muted);
+    z-index: 1;
   }
-  :deep(.el-input .el-input__wrapper) { padding-left: 36px; }
+
+  :deep(.el-input .el-input__wrapper) {
+    padding-left: 36px;
+  }
 }
 
 .table-card {
   background: var(--card-bg);
   border: 1px solid var(--border-color);
-  border-radius: 12px;
+  border-radius: var(--radius-lg);
   overflow: hidden;
 
   .table-toolbar {
-    display: flex; align-items: center; gap: 12px;
-    padding: 12px 20px; background: #e6f7ff; border-bottom: 1px solid #91d5ff;
-    .selected-info { font-size: 14px; color: #1890ff; }
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 12px 20px;
+    background: var(--primary-bg);
+    border-bottom: 1px solid var(--border-light);
+
+    .selected-info {
+      font-size: var(--fs-sm);
+      color: var(--primary);
+      font-weight: 500;
+    }
   }
 
   .contract-link {
-    color: var(--primary-color); text-decoration: none; font-weight: 500;
-    &:hover { color: var(--primary-light, #4080FF); }
+    color: var(--primary);
+    text-decoration: none;
+    font-weight: 500;
+    transition: color var(--transition-fast);
+
+    &:hover {
+      color: var(--primary-dark);
+    }
   }
 
-  .amount { font-weight: 500; color: var(--text-primary); }
+  .amount {
+    font-weight: 500;
+    color: var(--text-primary);
+  }
 }
 
 .table-footer {
-  display: flex; justify-content: space-between; align-items: center;
-  padding: 16px 20px; border-top: 1px solid var(--border-color);
-  .table-info { font-size: 14px; color: var(--text-muted); }
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 16px 20px;
+  border-top: 1px solid var(--border-color);
+
+  .table-info {
+    font-size: var(--fs-sm);
+    color: var(--text-muted);
+  }
 }
 
 .import-dialog-content {
   .import-tips {
-    margin-bottom: 16px; padding: 12px 16px;
-    background: #f6f7fa; border-radius: 8px;
-    display: flex; justify-content: space-between; align-items: center;
-    p { margin: 0; font-size: 14px; color: var(--text-secondary); }
+    margin-bottom: 16px;
+    padding: 12px 16px;
+    background: var(--gray-50);
+    border-radius: var(--radius-md);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+
+    p {
+      margin: 0;
+      font-size: var(--fs-sm);
+      color: var(--text-secondary);
+    }
   }
+
   .import-progress {
-    display: flex; align-items: center; gap: 8px; margin-top: 16px;
-    color: var(--primary-color); font-size: 14px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-top: 16px;
+    color: var(--primary);
+    font-size: var(--fs-sm);
   }
+
   .import-result {
     margin-top: 16px;
+
     .error-list {
-      margin-top: 12px; max-height: 200px; overflow-y: auto;
-      .error-title { font-size: 13px; font-weight: 600; color: var(--text-secondary); margin-bottom: 8px; }
-      .error-item { font-size: 13px; color: #F53F3F; padding: 4px 0; }
+      margin-top: 12px;
+      max-height: 200px;
+      overflow-y: auto;
+
+      .error-title {
+        font-size: var(--fs-xs);
+        font-weight: 600;
+        color: var(--text-secondary);
+        margin-bottom: 8px;
+      }
+
+      .error-item {
+        font-size: var(--fs-xs);
+        color: var(--danger);
+        padding: 4px 0;
+      }
     }
   }
 }

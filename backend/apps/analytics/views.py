@@ -2,13 +2,33 @@ import datetime
 from datetime import timedelta
 
 from django.db.models import Count, Sum
-from django.db.models.functions import TruncMonth
+from django.db.models.functions import TruncMonth, TruncWeek, TruncDay
 from django.utils import timezone
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.views import APIView
 
 from apps.contracts.models import Contract, PaymentPlan
+from apps.system.models import SalesTarget
 from core.response import success_response
+
+
+def _month_offset(base, months_back):
+    y = base.year
+    m = base.month - months_back
+    while m <= 0:
+        m += 12
+        y -= 1
+    return base.replace(year=y, month=m, day=1)
+
+
+def _determine_granularity(start_date, end_date):
+    delta = (end_date - start_date).days
+    if delta <= 90:
+        return 'day', TruncDay, '%Y-%m-%d'
+    elif delta <= 365:
+        return 'week', TruncWeek, '%Y-W%W'
+    else:
+        return 'month', TruncMonth, '%Y-%m'
 
 
 class DashboardStatsView(APIView):
@@ -23,21 +43,20 @@ class DashboardStatsView(APIView):
             total_amount=Sum('amount'),
         )
 
-        active_count = Contract.objects.filter(status='active').count()
-        completed_count = Contract.objects.filter(status='completed').count()
-
         month_stats = Contract.objects.filter(created_at__gte=month_start).aggregate(
             this_month_new=Count('id'),
-            this_month_amount=Sum('amount'),
         )
 
+        overdue_count = PaymentPlan.objects.filter(
+            status__in=[PaymentPlan.Status.PENDING, PaymentPlan.Status.OVERDUE, PaymentPlan.Status.SEVERE_OVERDUE],
+            due_date__lt=datetime.date.today()
+        ).values('contract').distinct().count()
+
         data = {
-            'total_contracts': total_stats['total_contracts'] or 0,
-            'total_amount': str(total_stats['total_amount'] or 0),
-            'active_contracts': active_count,
-            'completed_contracts': completed_count,
-            'this_month_new': month_stats['this_month_new'] or 0,
-            'this_month_amount': str(month_stats['this_month_amount'] or 0),
+            'totalContracts': total_stats['total_contracts'] or 0,
+            'totalAmount': float(total_stats['total_amount'] or 0),
+            'monthlyNew': month_stats['this_month_new'] or 0,
+            'pendingAlerts': overdue_count,
         }
         return success_response(data=data)
 
@@ -46,27 +65,82 @@ class ContractTrendView(APIView):
     permission_classes = [IsAuthenticated]
 
     def get(self, request):
-        days = int(request.query_params.get('days', 30))
-        end_date = timezone.now().date()
-        start_date = end_date - timedelta(days=days)
+        now = timezone.now()
+        start_str = request.query_params.get('start_date')
+        end_str = request.query_params.get('end_date')
+        force_monthly = request.query_params.get('granularity') == 'month'
 
-        contracts = (
+        if start_str and end_str:
+            try:
+                start_date = datetime.datetime.strptime(start_str, '%Y-%m-%d').date()
+                end_date = datetime.datetime.strptime(end_str, '%Y-%m-%d').date()
+            except ValueError:
+                start_date = (now - timedelta(days=180)).date()
+                end_date = now.date()
+        else:
+            months = int(request.query_params.get('months', 6))
+            start_date = _month_offset(now, months - 1).date()
+            end_date = now.date()
+            force_monthly = True
+
+        if force_monthly:
+            granularity, trunc_cls, fmt = 'month', TruncMonth, '%Y-%m'
+        else:
+            granularity, trunc_cls, fmt = _determine_granularity(start_date, end_date)
+
+        trends = (
             Contract.objects
-            .filter(created_at__date__gte=start_date)
-            .extra(select={'date': 'DATE(created_at)'})
-            .values('date')
-            .annotate(count=Count('id'), amount=Sum('amount'))
-            .order_by('date')
+            .filter(sign_date__gte=start_date, sign_date__lte=end_date)
+            .annotate(period=trunc_cls('sign_date'))
+            .values('period')
+            .annotate(amount=Sum('amount'))
+            .order_by('period')
         )
 
-        data = [
-            {
-                'date': str(item['date']),
-                'count': item['count'],
-                'amount': str(item['amount'] or 0),
-            }
-            for item in contracts
-        ]
+        trend_map = {}
+        for item in trends:
+            if item['period']:
+                trend_map[item['period'].strftime(fmt)] = float(item['amount'] or 0)
+
+        if granularity == 'day':
+            labels = []
+            current = start_date
+            while current <= end_date:
+                labels.append(current.strftime(fmt))
+                current += timedelta(days=1)
+        elif granularity == 'week':
+            labels = []
+            current = start_date
+            while current <= end_date:
+                labels.append(current.strftime(fmt))
+                current += timedelta(weeks=1)
+        else:
+            labels = []
+            current = start_date.replace(day=1)
+            end_month = end_date.replace(day=1)
+            while current <= end_month:
+                labels.append(current.strftime(fmt))
+                if current.month == 12:
+                    current = current.replace(year=current.year + 1, month=1)
+                else:
+                    current = current.replace(month=current.month + 1)
+
+        revenue = [trend_map.get(label, 0) for label in labels]
+
+        target = []
+        for label in labels:
+            if granularity == 'month':
+                sales_target = SalesTarget.objects.filter(period_label=label).first()
+                target.append(float(sales_target.target_amount) if sales_target else 0)
+            else:
+                target.append(0)
+
+        data = {
+            'labels': labels,
+            'revenue': revenue,
+            'target': target,
+            'granularity': granularity,
+        }
         return success_response(data=data)
 
 
@@ -78,18 +152,14 @@ class RegionDistributionView(APIView):
             Contract.objects
             .exclude(region='')
             .values('region')
-            .annotate(count=Count('id'), amount=Sum('amount'))
+            .annotate(amount=Sum('amount'))
             .order_by('-amount')
         )
 
-        data = [
-            {
-                'region': item['region'],
-                'count': item['count'],
-                'amount': str(item['amount'] or 0),
-            }
-            for item in distribution
-        ]
+        data = {
+            'regions': [item['region'] for item in distribution],
+            'counts': [float(item['amount'] or 0) for item in distribution],
+        }
         return success_response(data=data)
 
 
@@ -105,14 +175,14 @@ class StatusDistributionView(APIView):
         )
 
         status_map = dict(Contract.Status.choices)
-        data = [
+        items = [
             {
-                'status': status_map.get(item['status'], item['status']),
-                'key': item['status'],
-                'count': item['count'],
+                'name': status_map.get(item['status'], item['status']),
+                'value': item['count'],
             }
             for item in distribution
         ]
+        data = {'items': items}
         return success_response(data=data)
 
 

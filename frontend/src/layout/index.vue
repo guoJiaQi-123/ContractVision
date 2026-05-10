@@ -31,13 +31,13 @@ const appStore = useAppStore()
 
 .main-container {
   flex-direction: column;
-  transition: margin-left 0.3s;
+  transition: margin-left var(--transition-slow);
   min-height: 100%;
 }
 
 .app-main {
-  padding: 24px;
+  padding: var(--space-6, 24px);
   background: var(--bg-color);
-  min-height: calc(100vh - 60px);
+  min-height: calc(100vh - var(--header-height, 56px));
 }
 </style>

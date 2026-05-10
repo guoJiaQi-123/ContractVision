@@ -128,12 +128,7 @@ npm run dev
 | F029 | 数据质量校验与评分 | /contract/lifecycle | GET /v1/contracts/quality-report/; POST /v1/contracts/:id/recalculate_quality/ | 系统管理员、普通操作员 | 基于缺失字段/日期逻辑/金额/汇率换算等规则打分并给出整改建议 |
 | F030 | 重复合同识别与合并 | /contract/lifecycle | GET/POST /v1/contracts/duplicate-scan/ | 系统管理员 | 基于编号/客户/标题相似度与金额差异分组，支持选择主合同合并去重 |
 | F031 | 合同预警闭环（规则/试运行/工作台/审计） | /contract/alerts, /system/governance, header bell | /v1/system/alert-rules/ (strategy_options/preview_impact); /v1/system/alerts/ (scan/scan_preview/scan_summary/scan_preview_export); /v1/system/alert-center/; /v1/system/alert-workspace/ (summary/assignees/process/batch_process/reassign) | 全角色（查看/处理）；管理员（配置/扫描/重分派） | 支持试运行预览与 CSV 导出、规则级筛选、负责人策略解释、详情抽屉（合同快照/来源解释/时间轴）、就地处理与管理员重分派；处置动作写入审计日志 |
-| F032 | 销售目标与目标预警 | /analytics/management, /system/governance | /v1/system/sales-targets/; GET /v1/analytics/target-progress/ | 系统管理员、查看者 | 维护目标维度与阈值；计算进度并在达成率低于阈值时进入预警扫描命中项 |
-| F033 | 经营驾驶舱模板与组件渲染 | /analytics/management, /system/config-center | /v1/system/dashboards/; GET /v1/analytics/dashboard-data/ | 全角色 | 保存看板模板（layout/widgets JSON）并渲染指标/趋势/榜单组件（非拖拽式编辑） |
-| F034 | 多维下钻分析 | /analytics/management | GET /v1/analytics/drilldown/ | 全角色 | 按区域/部门/业务员/客户/产品维度聚合统计，并返回部分合同明细列表 |
-| F035 | 客户生命周期价值（CLV） | /analytics/management, /analytics/prediction | GET /v1/analytics/customer-value/ | 系统管理员 | 按客户累计金额与合同数计算价值评分并分层展示 |
-| F036 | 团队/个人绩效分析 | /analytics/management | GET /v1/analytics/team-performance/ | 全角色 | 按业务员或部门聚合业绩额/合同数/客单价/回款率/目标达成率 |
+
 | F037 | 数据模板库（导入/导出/报表） | /system/config-center | /v1/system/templates/ | 系统管理员 | 模板字段配置与版本管理（用于治理与扩展对接，导入/导出接口当前仍使用内置字段集） |
 | F038 | 多币种汇率与本位币换算 | /system/config-center | /v1/system/currency-rates/ | 系统管理员 | 维护汇率；合同指标计算时按签约日 sign_date 汇率换算 base_amount |
 | F039 | 移动端驾驶舱 | /dashboard/mobile | GET /v1/system/mobile-dashboard/ | 全角色 | 移动端汇总合同总数/金额、待处理预警、30 天内到期等指标，并返回移动端模板配置 |
-| F040 | 印花税自动计算与统计 | /system/config-center, /analytics/management | /v1/system/stamp-tax-rules/; GET /v1/analytics/tax-analysis/ | 系统管理员 | 按合同类型匹配税率自动计算 stamp_tax_amount；按月份与合同类型汇总税额统计 |

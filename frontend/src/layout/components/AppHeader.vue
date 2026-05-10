@@ -235,7 +235,7 @@ watch(() => route.fullPath, () => {
 
 <style lang="scss" scoped>
 .app-header {
-  height: 60px;
+  height: var(--header-height, 56px);
   background: var(--card-bg);
   border-bottom: 1px solid var(--border-color);
   padding: 0 24px;
@@ -254,17 +254,17 @@ watch(() => route.fullPath, () => {
     height: 36px;
     border: none;
     background: transparent;
-    border-radius: 8px;
+    border-radius: var(--radius-sm);
     cursor: pointer;
     display: flex;
     align-items: center;
     justify-content: center;
     color: var(--text-secondary);
-    transition: all 0.2s ease;
+    transition: background var(--transition-fast), color var(--transition-fast);
 
     &:hover {
-      background: var(--bg-color);
-      color: var(--primary-color);
+      background: var(--gray-50);
+      color: var(--primary);
     }
 
     &:active {
@@ -298,22 +298,22 @@ watch(() => route.fullPath, () => {
     height: 36px;
     border: none;
     background: transparent;
-    border-radius: 8px;
+    border-radius: var(--radius-sm);
     cursor: pointer;
     display: flex;
     align-items: center;
     justify-content: center;
     color: var(--text-secondary);
-    transition: all 0.2s ease;
+    transition: background var(--transition-fast), color var(--transition-fast);
 
     &:hover {
-      background: var(--bg-color);
-      color: var(--primary-color);
+      background: var(--gray-50);
+      color: var(--primary);
     }
 
     &.has-alert {
-      color: var(--primary-color);
-      background: rgba(22, 93, 255, 0.08);
+      color: var(--primary);
+      background: var(--primary-bg);
     }
   }
 
@@ -323,22 +323,22 @@ watch(() => route.fullPath, () => {
     cursor: pointer;
     gap: 10px;
     padding: 6px 12px;
-    border-radius: 12px;
-    transition: all 0.2s ease;
+    border-radius: var(--radius-md);
+    transition: background var(--transition-fast);
 
     .user-avatar {
       position: relative;
-      width: 38px;
-      height: 38px;
+      width: 36px;
+      height: 36px;
       border-radius: 50%;
-      background: linear-gradient(135deg, #165DFF, #4080FF);
+      background: var(--primary);
       display: flex;
       align-items: center;
       justify-content: center;
       color: #ffffff;
       flex-shrink: 0;
       overflow: hidden;
-      box-shadow: 0 8px 18px rgba(22, 93, 255, 0.2);
+      box-shadow: var(--shadow-xs);
 
       .avatar-image {
         width: 100%;
@@ -361,8 +361,7 @@ watch(() => route.fullPath, () => {
         width: 18px;
         height: 18px;
         border-radius: 50%;
-        background: rgba(12, 22, 44, 0.22);
-        backdrop-filter: blur(6px);
+        background: rgba(0, 0, 0, 0.15);
         display: flex;
         align-items: center;
         justify-content: center;
@@ -396,7 +395,7 @@ watch(() => route.fullPath, () => {
     }
 
     &:hover {
-      background: var(--bg-color);
+      background: var(--gray-50);
     }
   }
 }
@@ -410,14 +409,15 @@ watch(() => route.fullPath, () => {
 
   &:hover {
     background: var(--primary-bg);
-    color: var(--primary-color);
+    color: var(--primary);
   }
 }
 
 :deep(.alert-popover) {
   padding: 0 !important;
-  border-radius: 18px !important;
+  border-radius: var(--radius-lg) !important;
   overflow: hidden;
+  box-shadow: var(--shadow-md);
 }
 
 .alert-panel {
@@ -453,8 +453,8 @@ watch(() => route.fullPath, () => {
 
 .summary-item {
   padding: 10px 12px;
-  border-radius: 14px;
-  background: var(--bg-color);
+  border-radius: var(--radius-md);
+  background: var(--gray-50);
   display: flex;
   flex-direction: column;
   gap: 4px;
@@ -471,15 +471,15 @@ watch(() => route.fullPath, () => {
   }
 
   &.high {
-    background: rgba(245, 108, 108, 0.08);
+    background: var(--danger-bg);
   }
 
   &.medium {
-    background: rgba(230, 162, 60, 0.08);
+    background: var(--warning-bg);
   }
 
   &.low {
-    background: rgba(64, 158, 255, 0.08);
+    background: var(--primary-bg);
   }
 }
 
@@ -498,9 +498,9 @@ watch(() => route.fullPath, () => {
   gap: 8px;
   justify-content: space-between;
   padding: 12px;
-  border-radius: 14px;
-  background: var(--bg-color);
-  border: 1px solid rgba(148, 163, 184, 0.14);
+  border-radius: var(--radius-md);
+  background: var(--gray-50);
+  border: 1px solid var(--border-color);
 }
 
 .alert-item-main {

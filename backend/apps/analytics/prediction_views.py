@@ -1,8 +1,10 @@
 import datetime
 
 import numpy as np
+from dateutil.relativedelta import relativedelta
 from django.db.models import Count, Sum
 from django.db.models.functions import TruncMonth
+from django.utils import timezone
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.views import APIView
 
@@ -18,8 +20,8 @@ class SalesPredictionView(APIView):
         predict_months = int(request.data.get('predict_months', 6))
         history_months = int(request.data.get('history_months', 12))
 
-        now = datetime.datetime.now()
-        start_date = now - datetime.timedelta(days=history_months * 30)
+        now = timezone.now()
+        start_date = now - relativedelta(months=history_months)
 
         trends = (
             Contract.objects
@@ -61,7 +63,7 @@ class SalesPredictionView(APIView):
             last_month = trend_list[-1]['month']
             future_labels = []
             for i in range(1, predict_months + 1):
-                next_month = last_month + datetime.timedelta(days=30 * i)
+                next_month = last_month + relativedelta(months=i)
                 future_labels.append(next_month.strftime('%Y-%m'))
 
             data = {

@@ -8,6 +8,14 @@ export function getLogDetail(id) {
   return request.get(`/api/v1/system/logs/${id}/`)
 }
 
+export function getLogSummary(params) {
+  return request.get('/api/v1/system/logs/summary/', { params })
+}
+
+export function getLogFilterOptions() {
+  return request.get('/api/v1/system/logs/filter_options/')
+}
+
 export function getBackupList() {
   return request.get('/api/v1/system/backup/')
 }

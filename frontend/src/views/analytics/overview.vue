@@ -7,7 +7,7 @@ import { TitleComponent, TooltipComponent, LegendComponent, GridComponent } from
 import VChart from 'vue-echarts'
 import { getDashboardStats, getStatusDistribution, getTopClients } from '@/api/analytics'
 import { TrendCharts, Document, Warning, CircleCheck, ArrowUp, ArrowDown } from '@element-plus/icons-vue'
-
+import DESIGN_COLORS from '@/utils/colors'
 use([CanvasRenderer, PieChart, BarChart, TitleComponent, TooltipComponent, LegendComponent, GridComponent])
 
 const dateRange = ref([])
@@ -35,7 +35,7 @@ const statCards = [
     title: '签约合同数',
     unit: '个',
     icon: Document,
-    color: '#165DFF',
+    color: DESIGN_COLORS.primary,
     bgColor: 'rgba(22, 93, 255, 0.08)'
   },
   {
@@ -43,7 +43,7 @@ const statCards = [
     title: '签约总金额',
     unit: '万',
     icon: TrendCharts,
-    color: '#FF7D00',
+    color: DESIGN_COLORS.warning,
     bgColor: 'rgba(255, 125, 0, 0.08)'
   },
   {
@@ -51,7 +51,7 @@ const statCards = [
     title: '本月新签合同',
     unit: '个',
     icon: CircleCheck,
-    color: '#00B42A',
+    color: DESIGN_COLORS.success,
     bgColor: 'rgba(0, 180, 42, 0.08)'
   },
   {
@@ -59,7 +59,7 @@ const statCards = [
     title: '待处理预警',
     unit: '个',
     icon: Warning,
-    color: '#F53F3F',
+    color: DESIGN_COLORS.danger,
     bgColor: 'rgba(245, 63, 63, 0.08)'
   }
 ]
@@ -96,7 +96,7 @@ const loadDistribution = async () => {
           label: { show: false }
         }
       ],
-      color: ['#165DFF', '#00B42A', '#FF7D00', '#F53F3F', '#722ED1', '#0FC6C2']
+      color: [DESIGN_COLORS.primary, DESIGN_COLORS.success, DESIGN_COLORS.warning, DESIGN_COLORS.danger, DESIGN_COLORS.secondary1, DESIGN_COLORS.secondary2]
     }
   } catch {
     distributionEmpty.value = true
@@ -140,8 +140,8 @@ const loadRanking = async () => {
               type: 'linear',
               x: 0, y: 0, x2: 1, y2: 0,
               colorStops: [
-                { offset: 0, color: '#4080FF' },
-                { offset: 1, color: '#165DFF' }
+                { offset: 0, color: DESIGN_COLORS.primaryLight },
+                { offset: 1, color: DESIGN_COLORS.primary }
               ]
             },
             borderRadius: [0, 4, 4, 0]
@@ -235,7 +235,7 @@ onMounted(() => {
   margin-bottom: 24px;
 
   h1 {
-    font-size: 24px;
+    font-size: var(--fs-xl);
     font-weight: 600;
     color: var(--text-primary);
   }
@@ -248,13 +248,14 @@ onMounted(() => {
 .stat-card {
   background: var(--card-bg);
   border: 1px solid var(--border-color);
-  border-radius: 12px;
+  border-radius: var(--radius-lg);
   padding: 20px;
   margin-bottom: 16px;
-  transition: all 0.3s ease;
+  transition: all var(--transition-normal);
 
   &:hover {
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+    box-shadow: var(--shadow-md);
+    border-color: var(--border-light);
   }
 
   .stat-header {
@@ -267,7 +268,7 @@ onMounted(() => {
   .stat-icon {
     width: 48px;
     height: 48px;
-    border-radius: 12px;
+    border-radius: var(--radius-md);
     display: flex;
     align-items: center;
     justify-content: center;
@@ -280,17 +281,18 @@ onMounted(() => {
       font-size: 28px;
       font-weight: 600;
       color: var(--text-primary);
+      line-height: 1.2;
     }
 
     .unit {
-      font-size: 16px;
+      font-size: var(--fs-md);
       color: var(--text-secondary);
       margin-left: 4px;
     }
   }
 
   .stat-title {
-    font-size: 14px;
+    font-size: var(--fs-base);
     color: var(--text-muted);
   }
 }
@@ -300,14 +302,22 @@ onMounted(() => {
 }
 
 .chart-card {
+  background: var(--card-bg);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-lg);
   padding: 20px;
   margin-bottom: 16px;
+  transition: all var(--transition-normal);
+
+  &:hover {
+    box-shadow: var(--shadow-sm);
+  }
 
   .card-header {
     margin-bottom: 16px;
 
     h3 {
-      font-size: 16px;
+      font-size: var(--fs-md);
       font-weight: 600;
       color: var(--text-primary);
     }

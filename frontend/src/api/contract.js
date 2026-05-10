@@ -56,6 +56,12 @@ export function exportContractsPdf(params) {
   })
 }
 
+export function exportContractDetailPdf(id) {
+  return request.get(`/api/v1/contracts/${id}/detail_pdf/`, {
+    responseType: 'blob'
+  })
+}
+
 export function getContractFulfillment(id) {
   return request.get(`/api/v1/contracts/${id}/fulfillment/`)
 }

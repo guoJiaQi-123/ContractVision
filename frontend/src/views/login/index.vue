@@ -122,12 +122,13 @@ const handleLogin = async () => {
   display: flex;
   height: 100vh;
   overflow: hidden;
+  font-family: var(--font-sans);
 }
 
 .login-left {
   display: none;
   width: 800px;
-  background: linear-gradient(135deg, #165DFF 0%, #4080FF 100%);
+  background: var(--primary);
   flex-shrink: 0;
 
   @media (min-width: 1024px) {
@@ -145,9 +146,9 @@ const handleLogin = async () => {
   .brand-icon {
     width: 80px;
     height: 80px;
-    background: rgba(255, 255, 255, 0.2);
+    background: rgba(255, 255, 255, 0.15);
     backdrop-filter: blur(10px);
-    border-radius: 16px;
+    border-radius: var(--radius-lg);
     display: flex;
     align-items: center;
     justify-content: center;
@@ -178,7 +179,7 @@ const handleLogin = async () => {
   display: flex;
   align-items: center;
   justify-content: center;
-  background: #ffffff;
+  background: var(--bg-color);
   padding: 24px;
 }
 
@@ -211,14 +212,18 @@ const handleLogin = async () => {
   :deep(.el-input) {
     .el-input__wrapper {
       padding: 4px 12px;
-      border-radius: 8px;
+      border-radius: var(--radius-sm);
       border: 1px solid var(--border-color);
       box-shadow: none;
-      transition: border-color 0.2s;
+      transition: border-color var(--transition-fast), box-shadow var(--transition-fast);
 
-      &:hover,
+      &:hover {
+        border-color: var(--primary);
+      }
+
       &:focus-within {
-        border-color: var(--primary-color);
+        border-color: var(--primary);
+        box-shadow: 0 0 0 3px var(--primary-bg);
       }
     }
   }
@@ -246,9 +251,10 @@ const handleLogin = async () => {
   .forgot-link {
     background: none;
     border: none;
-    color: var(--primary-color);
+    color: var(--primary);
     font-size: 14px;
     cursor: pointer;
+    transition: color var(--transition-fast);
 
     &:hover {
       color: var(--primary-light);
@@ -259,11 +265,12 @@ const handleLogin = async () => {
 .login-btn {
   width: 100%;
   height: 48px;
-  border-radius: 8px;
+  border-radius: var(--radius-md);
   font-size: 16px;
   font-weight: 500;
-  background: var(--primary-color);
-  border-color: var(--primary-color);
+  background: var(--primary);
+  border-color: var(--primary);
+  transition: background var(--transition-fast), border-color var(--transition-fast);
 
   &:hover {
     background: var(--primary-light);
@@ -278,9 +285,10 @@ const handleLogin = async () => {
   color: var(--text-secondary);
 
   .register-link {
-    color: var(--primary-color);
+    color: var(--primary);
     text-decoration: none;
     font-weight: 500;
+    transition: color var(--transition-fast);
 
     &:hover {
       color: var(--primary-light);

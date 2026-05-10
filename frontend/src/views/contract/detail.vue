@@ -1,13 +1,15 @@
 <script setup>
 import { ref, onMounted } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
-import { getContractDetail } from '@/api/contract'
+import { ElMessage } from 'element-plus'
+import { getContractDetail, exportContractDetailPdf } from '@/api/contract'
 import { ArrowLeft, Document, Download } from '@element-plus/icons-vue'
 
 const route = useRoute()
 const router = useRouter()
 const loading = ref(true)
 const loadError = ref(false)
+const pdfLoading = ref(false)
 
 const contractInfo = ref({})
 
@@ -31,6 +33,31 @@ const formatAmount = (val) => {
 
 const goBack = () => {
   router.push('/contract/list')
+}
+
+const goEdit = () => {
+  router.push(`/contract/edit/${route.params.id}`)
+}
+
+const handleExportPdf = async () => {
+  pdfLoading.value = true
+  try {
+    const res = await exportContractDetailPdf(route.params.id)
+    const blob = new Blob([res], { type: 'application/pdf' })
+    const url = window.URL.createObjectURL(blob)
+    const link = document.createElement('a')
+    link.href = url
+    link.download = `contract_${contractInfo.value.contract_no || route.params.id}.pdf`
+    document.body.appendChild(link)
+    link.click()
+    document.body.removeChild(link)
+    window.URL.revokeObjectURL(url)
+    ElMessage.success('PDF 导出成功')
+  } catch {
+    ElMessage.error('PDF 导出失败，请稍后重试')
+  } finally {
+    pdfLoading.value = false
+  }
 }
 
 const loadDetail = async () => {
@@ -65,11 +92,11 @@ onMounted(() => {
         </div>
       </div>
       <div class="header-actions" v-if="!loading && !loadError">
-        <el-button class="btn-outline">
+        <el-button class="btn-outline" :loading="pdfLoading" @click="handleExportPdf">
           <el-icon><Download /></el-icon>
           导出PDF
         </el-button>
-        <el-button type="primary" class="btn-primary">
+        <el-button type="primary" class="btn-primary" @click="goEdit">
           <el-icon><Document /></el-icon>
           编辑合同
         </el-button>
@@ -175,23 +202,23 @@ onMounted(() => {
   }
 
   .back-btn {
-    border-radius: 8px;
-    font-size: 14px;
+    border-radius: var(--radius-md);
+    font-size: var(--fs-sm);
     padding: 8px 16px;
     border: 1px solid var(--border-color);
     background: var(--card-bg);
     color: var(--text-secondary);
-    transition: all 0.2s;
+    transition: all var(--transition-fast);
 
     &:hover {
-      border-color: var(--primary-color);
-      color: var(--primary-color);
+      border-color: var(--primary);
+      color: var(--primary);
     }
   }
 
   .header-info {
     h1 {
-      font-size: 24px;
+      font-size: var(--fs-xl);
       font-weight: 700;
       color: var(--text-primary);
       margin: 0;
@@ -200,7 +227,7 @@ onMounted(() => {
 
     .subtitle {
       margin: 4px 0 0;
-      font-size: 14px;
+      font-size: var(--fs-sm);
       color: var(--text-muted);
     }
   }
@@ -224,12 +251,12 @@ onMounted(() => {
 .card {
   background: var(--card-bg);
   border: 1px solid var(--border-color);
-  border-radius: 12px;
+  border-radius: var(--radius-lg);
   padding: 24px;
-  transition: box-shadow 0.3s ease;
+  transition: box-shadow var(--transition-normal);
 
   &:hover {
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.06);
+    box-shadow: var(--shadow-sm);
   }
 }
 
@@ -240,7 +267,7 @@ onMounted(() => {
   margin-bottom: 20px;
 
   h3 {
-    font-size: 16px;
+    font-size: var(--fs-md);
     font-weight: 600;
     color: var(--text-primary);
   }
@@ -262,19 +289,19 @@ onMounted(() => {
   gap: 6px;
 
   .info-label {
-    font-size: 13px;
+    font-size: var(--fs-xs);
     color: var(--text-muted);
     font-weight: 400;
   }
 
   .info-value {
-    font-size: 15px;
+    font-size: var(--fs-base);
     color: var(--text-primary);
     font-weight: 500;
 
     &.amount {
-      color: #165DFF;
-      font-size: 18px;
+      color: var(--primary);
+      font-size: var(--fs-lg);
       font-weight: 600;
     }
   }
@@ -289,12 +316,12 @@ onMounted(() => {
   gap: 6px;
 
   .info-label {
-    font-size: 13px;
+    font-size: var(--fs-xs);
     color: var(--text-muted);
   }
 
   .info-value {
-    font-size: 14px;
+    font-size: var(--fs-sm);
     color: var(--text-primary);
     line-height: 1.6;
   }

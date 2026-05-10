@@ -6,7 +6,7 @@ import { LineChart } from 'echarts/charts'
 import { TitleComponent, TooltipComponent, LegendComponent, GridComponent } from 'echarts/components'
 import VChart from 'vue-echarts'
 import { getContractTrend } from '@/api/analytics'
-
+import DESIGN_COLORS from '@/utils/colors'
 use([CanvasRenderer, LineChart, TitleComponent, TooltipComponent, LegendComponent, GridComponent])
 
 const timeGranularity = ref('month')
@@ -40,7 +40,7 @@ const loadTrend = async () => {
   try {
     const res = await getContractTrend(buildParams())
     const data = res.data
-    if (!data || (!data.months?.length && !data.revenue?.length)) {
+    if (!data || (!data.labels?.length && !data.revenue?.length)) {
       trendEmpty.value = true
       return
     }
@@ -61,7 +61,7 @@ const loadTrend = async () => {
       grid: { left: '3%', right: '4%', bottom: '3%', top: '14%', containLabel: true },
       xAxis: {
         type: 'category',
-        data: data.months || [],
+        data: data.labels || [],
         axisLine: { lineStyle: { color: '#E5E6EB' } },
         axisTick: { show: false },
         axisLabel: { color: '#86909C', fontSize: 12 }
@@ -79,7 +79,7 @@ const loadTrend = async () => {
           type: 'line',
           smooth: true,
           data: data.revenue || [],
-          itemStyle: { color: '#165DFF' },
+          itemStyle: { color: DESIGN_COLORS.primary },
           lineStyle: { width: 2.5 },
           areaStyle: {
             color: {
@@ -122,7 +122,7 @@ const loadYoy = async () => {
     const params = { ...buildParams(), compare: 'yoy' }
     const res = await getContractTrend(params)
     const data = res.data
-    if (!data || (!data.months?.length && !data.revenue?.length)) {
+    if (!data || (!data.labels?.length && !data.revenue?.length)) {
       yoyEmpty.value = true
       return
     }
@@ -142,7 +142,7 @@ const loadYoy = async () => {
       grid: { left: '3%', right: '4%', bottom: '3%', top: '14%', containLabel: true },
       xAxis: {
         type: 'category',
-        data: data.months || [],
+        data: data.labels || [],
         axisLine: { lineStyle: { color: '#E5E6EB' } },
         axisTick: { show: false },
         axisLabel: { color: '#86909C', fontSize: 12 }
@@ -160,7 +160,7 @@ const loadYoy = async () => {
           type: 'line',
           smooth: true,
           data: data.revenue || [],
-          itemStyle: { color: '#165DFF' },
+          itemStyle: { color: DESIGN_COLORS.primary },
           lineStyle: { width: 2.5 },
           areaStyle: {
             color: {
@@ -180,7 +180,7 @@ const loadYoy = async () => {
           type: 'line',
           smooth: true,
           data: data.target || [],
-          itemStyle: { color: '#FF7D00' },
+          itemStyle: { color: DESIGN_COLORS.warning },
           lineStyle: { width: 2 },
           symbol: 'circle',
           symbolSize: 5
@@ -201,7 +201,7 @@ const loadMom = async () => {
     const params = { ...buildParams(), compare: 'mom' }
     const res = await getContractTrend(params)
     const data = res.data
-    if (!data || (!data.months?.length && !data.revenue?.length)) {
+    if (!data || (!data.labels?.length && !data.revenue?.length)) {
       momEmpty.value = true
       return
     }
@@ -239,7 +239,7 @@ const loadMom = async () => {
       grid: { left: '3%', right: '4%', bottom: '3%', top: '14%', containLabel: true },
       xAxis: {
         type: 'category',
-        data: data.months || [],
+        data: data.labels || [],
         axisLine: { lineStyle: { color: '#E5E6EB' } },
         axisTick: { show: false },
         axisLabel: { color: '#86909C', fontSize: 12 }
@@ -266,7 +266,7 @@ const loadMom = async () => {
           type: 'line',
           smooth: true,
           data: revenue,
-          itemStyle: { color: '#165DFF' },
+          itemStyle: { color: DESIGN_COLORS.primary },
           lineStyle: { width: 2.5 },
           areaStyle: {
             color: {
@@ -287,7 +287,7 @@ const loadMom = async () => {
           smooth: true,
           yAxisIndex: 1,
           data: rateData,
-          itemStyle: { color: '#00B42A' },
+          itemStyle: { color: DESIGN_COLORS.success },
           lineStyle: { width: 2, type: 'dashed' },
           symbol: 'diamond',
           symbolSize: 7
@@ -379,6 +379,8 @@ onMounted(() => {
 <style lang="scss" scoped>
 .analytics-trend-container {
   padding: 0;
+  min-height: 100%;
+  background: var(--bg-color);
 }
 
 .page-header {
@@ -386,57 +388,92 @@ onMounted(() => {
   justify-content: space-between;
   align-items: flex-start;
   margin-bottom: 24px;
+  padding-bottom: 20px;
+  border-bottom: 1px solid var(--border-light);
 
   h1 {
-    font-size: 24px;
+    font-size: var(--fs-xl);
     font-weight: 600;
     color: var(--text-primary);
+    line-height: 1.4;
+  }
+
+  .text-muted {
+    color: var(--text-muted);
+    font-size: var(--fs-sm);
   }
 
   .header-actions {
     display: flex;
     align-items: center;
     flex-shrink: 0;
+    gap: 12px;
   }
 }
 
 .card {
   background: var(--card-bg);
   border: 1px solid var(--border-color);
-  border-radius: 12px;
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-xs);
 }
 
 .chart-card {
-  padding: 20px;
+  padding: 24px;
   margin-bottom: 16px;
-  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  transition: box-shadow var(--transition-normal), border-color var(--transition-normal);
 
   &:hover {
-    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.06);
+    box-shadow: var(--shadow-md);
+    border-color: var(--primary-light);
   }
 
   .card-header {
-    margin-bottom: 16px;
+    margin-bottom: 20px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
 
     h3 {
-      font-size: 16px;
+      font-size: var(--fs-md);
       font-weight: 600;
       color: var(--text-primary);
+      position: relative;
+      padding-left: 12px;
+
+      &::before {
+        content: '';
+        position: absolute;
+        left: 0;
+        top: 50%;
+        transform: translateY(-50%);
+        width: 3px;
+        height: 16px;
+        background: var(--primary);
+        border-radius: 2px;
+      }
     }
   }
 
   .chart {
-    height: 320px;
+    height: 340px;
     width: 100%;
   }
 
   .chart-loading {
-    height: 320px;
+    height: 340px;
     width: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
   }
 }
 
 .chart-section {
   margin-bottom: 16px;
+
+  .el-col {
+    margin-bottom: 0;
+  }
 }
 </style>

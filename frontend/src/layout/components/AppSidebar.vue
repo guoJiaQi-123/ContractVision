@@ -3,7 +3,7 @@ import { computed } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { useAppStore } from '@/store/modules/app'
 import { useUserStore } from '@/store/modules/user'
-import { TrendCharts, Document, DataLine, User, Setting, HomeFilled, DataAnalysis, Location, Notebook, Tickets, MagicStick, FolderOpened, Connection, Finished, Monitor, Operation, SetUp, Cellphone, Bell } from '@element-plus/icons-vue'
+import { TrendCharts, Document, DataLine, User, Setting, HomeFilled, DataAnalysis, Location, Notebook, Tickets, MagicStick, FolderOpened, Connection, Finished, Monitor, Operation, SetUp, Cellphone, Bell, Files, List, OfficeBuilding, Goods, UserFilled } from '@element-plus/icons-vue'
 
 const route = useRoute()
 const router = useRouter()
@@ -15,13 +15,12 @@ const activeMenu = computed(() => route.path)
 
 const menuList = [
   { path: '/dashboard', title: '首页概览', icon: HomeFilled },
-  { path: '/dashboard/mobile', title: '移动驾驶舱', icon: Cellphone },
   {
     path: '/contract',
     title: '合同管理',
-    icon: Document,
+    icon: Files,
     children: [
-      { path: '/contract/list', title: '合同列表' },
+      { path: '/contract/list', title: '合同列表', icon: List },
       { path: '/contract/lifecycle', title: '履约中心', icon: Finished },
       { path: '/contract/alerts', title: '预警工作台', icon: Bell }
     ]
@@ -36,7 +35,8 @@ const menuList = [
       { path: '/analytics/region', title: '区域分析', icon: Location },
       { path: '/analytics/report', title: '报表中心', icon: Tickets },
       { path: '/analytics/prediction', title: '智能分析', icon: MagicStick },
-      { path: '/analytics/management', title: '经营驾驶舱', icon: Monitor }
+      { path: '/analytics/management', title: '经营驾驶舱', icon: Monitor },
+      { path: '/analytics/mobile', title: '移动驾驶舱', icon: Cellphone }
     ]
   },
   {
@@ -51,6 +51,17 @@ const menuList = [
       { path: '/system/integration', title: '第三方集成', icon: Connection },
       { path: '/system/governance', title: '治理控制台', icon: Operation },
       { path: '/system/config-center', title: '模板与汇率', icon: SetUp }
+    ]
+  },
+  {
+    path: '/enterprise',
+    title: '企业管理',
+    icon: OfficeBuilding,
+    roles: ['admin'],
+    children: [
+      { path: '/enterprise/department', title: '部门管理', icon: OfficeBuilding },
+      { path: '/enterprise/product-type', title: '产品类型管理', icon: Goods },
+      { path: '/enterprise/customer', title: '客户管理', icon: UserFilled }
     ]
   }
 ]
@@ -128,10 +139,10 @@ const handleMenuSelect = (path) => {
   z-index: 1001;
   overflow: hidden;
   background-color: var(--card-bg);
-  transition: width 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  border-right: 1px solid var(--border-color);
+  transition: width var(--transition-normal);
   display: flex;
   flex-direction: column;
-  border-right: 1px solid var(--border-color);
 
   .logo {
     height: 60px;
@@ -145,23 +156,24 @@ const handleMenuSelect = (path) => {
     white-space: nowrap;
     overflow: hidden;
     cursor: pointer;
-    transition: background 0.2s;
+    transition: background var(--transition-normal);
 
     &:hover {
-      background: var(--bg-color);
+      background: var(--gray-50);
     }
 
     .logo-icon {
       width: 34px;
       height: 34px;
-      background: linear-gradient(135deg, #165DFF 0%, #4080FF 100%);
-      border-radius: 8px;
+      background: var(--primary);
+      border-radius: var(--radius-md);
       display: flex;
       align-items: center;
       justify-content: center;
       color: #ffffff;
       flex-shrink: 0;
-      transition: transform 0.3s ease;
+      box-shadow: var(--shadow-xs);
+      transition: transform var(--transition-normal);
 
       &:hover {
         transform: scale(1.05);
@@ -198,23 +210,23 @@ const handleMenuSelect = (path) => {
       height: 44px;
       line-height: 44px;
       margin-bottom: 2px;
-      border-radius: 8px;
+      border-radius: var(--radius-sm);
       color: var(--text-secondary);
-      transition: all 0.2s ease;
+      transition: all var(--transition-normal);
       font-size: 14px;
 
       &:hover {
-        background: var(--bg-color);
+        background: var(--gray-50);
         color: var(--text-primary);
       }
 
       &.is-active {
-        background: rgba(22, 93, 255, 0.08);
-        color: var(--primary-color);
+        background: var(--primary-bg);
+        color: var(--primary);
         font-weight: 500;
 
         .el-icon {
-          color: var(--primary-color);
+          color: var(--primary);
         }
       }
 
@@ -222,7 +234,7 @@ const handleMenuSelect = (path) => {
         font-size: 18px;
         margin-right: 10px;
         color: var(--text-muted);
-        transition: color 0.2s;
+        transition: color var(--transition-normal);
       }
     }
 
@@ -230,13 +242,13 @@ const handleMenuSelect = (path) => {
       .el-sub-menu__title {
         height: 44px;
         line-height: 44px;
-        border-radius: 8px;
+        border-radius: var(--radius-sm);
         color: var(--text-secondary);
-        transition: all 0.2s ease;
+        transition: all var(--transition-normal);
         font-size: 14px;
 
         &:hover {
-          background: var(--bg-color);
+          background: var(--gray-50);
           color: var(--text-primary);
         }
 
@@ -244,16 +256,16 @@ const handleMenuSelect = (path) => {
           font-size: 18px;
           margin-right: 10px;
           color: var(--text-muted);
-          transition: color 0.2s;
+          transition: color var(--transition-normal);
         }
       }
 
       &.is-active > .el-sub-menu__title {
-        color: var(--primary-color);
+        color: var(--primary);
         font-weight: 500;
 
         .el-icon {
-          color: var(--primary-color);
+          color: var(--primary);
         }
       }
 
@@ -262,7 +274,7 @@ const handleMenuSelect = (path) => {
         line-height: 40px;
         padding-left: 52px !important;
         font-size: 13px;
-        border-radius: 6px;
+        border-radius: var(--radius-sm);
 
         .el-icon {
           font-size: 16px;
@@ -275,7 +287,7 @@ const handleMenuSelect = (path) => {
 
 .fade-enter-active,
 .fade-leave-active {
-  transition: opacity 0.2s ease;
+  transition: opacity var(--transition-normal);
 }
 
 .fade-enter-from,

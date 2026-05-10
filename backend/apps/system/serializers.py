@@ -4,11 +4,14 @@ from .models import (
     AlertMessage,
     AlertRule,
     CurrencyRate,
+    Customer,
     DashboardConfig,
     DataPermissionRule,
     DataTemplate,
+    Department,
     IntegrationConfig,
     OperationLog,
+    ProductType,
     SalesTarget,
     StampTaxRule,
 )
@@ -16,13 +19,16 @@ from .models import (
 
 class OperationLogSerializer(serializers.ModelSerializer):
     username = serializers.CharField(source='user.username', read_only=True, default='')
+    category_display = serializers.CharField(source='get_category_display', read_only=True)
+    level_display = serializers.CharField(source='get_level_display', read_only=True)
 
     class Meta:
         model = OperationLog
         fields = [
             'id', 'user', 'username', 'ip_address', 'action',
             'target', 'detail', 'before_data', 'after_data', 'method', 'path',
-            'status_code', 'created_at',
+            'status_code', 'category', 'category_display', 'level', 'level_display',
+            'duration_ms', 'user_agent', 'module', 'created_at',
         ]
         read_only_fields = ['id', 'created_at']
 
@@ -146,5 +152,73 @@ class StampTaxRuleSerializer(serializers.ModelSerializer):
         fields = [
             'id', 'contract_type', 'rate', 'description',
             'is_active', 'created_at', 'updated_at',
+        ]
+        read_only_fields = ['id', 'created_at', 'updated_at']
+
+
+class DepartmentSerializer(serializers.ModelSerializer):
+    parent_name = serializers.CharField(source='parent.name', read_only=True, default='')
+    children_count = serializers.SerializerMethodField()
+    children = serializers.SerializerMethodField()
+
+    class Meta:
+        model = Department
+        fields = [
+            'id', 'name', 'code', 'parent', 'parent_name',
+            'manager', 'description', 'is_active', 'sort_order',
+            'children_count', 'children', 'created_at', 'updated_at',
+        ]
+        read_only_fields = ['id', 'created_at', 'updated_at']
+
+    def get_children_count(self, obj):
+        return obj.children.count()
+
+    def get_children(self, obj):
+        children = obj.children.all().order_by('sort_order', 'id')
+        if children.exists():
+            return DepartmentSerializer(children, many=True).data
+        return []
+
+
+class DepartmentTreeSerializer(serializers.ModelSerializer):
+    children = serializers.SerializerMethodField()
+
+    class Meta:
+        model = Department
+        fields = [
+            'id', 'name', 'code', 'parent',
+            'manager', 'description', 'is_active', 'sort_order',
+            'children', 'created_at', 'updated_at',
+        ]
+
+    def get_children(self, obj):
+        children = obj.children.filter(is_active=True).order_by('sort_order', 'id')
+        if children.exists():
+            return DepartmentTreeSerializer(children, many=True).data
+        return []
+
+
+class ProductTypeSerializer(serializers.ModelSerializer):
+
+    class Meta:
+        model = ProductType
+        fields = [
+            'id', 'name', 'code', 'category',
+            'description', 'is_active', 'sort_order',
+            'created_at', 'updated_at',
+        ]
+        read_only_fields = ['id', 'created_at', 'updated_at']
+
+
+class CustomerSerializer(serializers.ModelSerializer):
+    level_display = serializers.CharField(source='get_level_display', read_only=True)
+
+    class Meta:
+        model = Customer
+        fields = [
+            'id', 'name', 'code', 'short_name', 'level', 'level_display',
+            'contact_person', 'contact_phone', 'contact_email',
+            'address', 'region', 'industry', 'description', 'is_active',
+            'created_at', 'updated_at',
         ]
         read_only_fields = ['id', 'created_at', 'updated_at']

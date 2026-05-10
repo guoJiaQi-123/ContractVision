@@ -177,6 +177,49 @@ onMounted(fetchData)
       <p class="text-muted">管理平台用户账号、角色权限与账号状态</p>
     </div>
 
+    <!-- 角色说明卡片 -->
+    <div class="role-desc-cards">
+      <div class="role-card">
+        <div class="role-header">
+          <div class="role-icon admin">管</div>
+          <div class="role-title">系统管理员</div>
+        </div>
+        <ul class="role-features">
+          <li>系统全功能操作权限</li>
+          <li>用户管理与权限分配</li>
+          <li>合同数据全局管控</li>
+          <li>系统配置与备份</li>
+          <li>深度数据分析</li>
+        </ul>
+      </div>
+      <div class="role-card">
+        <div class="role-header">
+          <div class="role-icon operator">操</div>
+          <div class="role-title">普通操作员</div>
+        </div>
+        <ul class="role-features">
+          <li>合同数据增删改查</li>
+          <li>多维度可视化查看</li>
+          <li>自定义报表生成</li>
+          <li>基础数据统计分析</li>
+          <li>账号自主管理</li>
+        </ul>
+      </div>
+      <div class="role-card">
+        <div class="role-header">
+          <div class="role-icon viewer">查</div>
+          <div class="role-title">只读用户</div>
+        </div>
+        <ul class="role-features">
+          <li>合同数据查询查看</li>
+          <li>可视化图表查看</li>
+          <li>报表查看与导出</li>
+          <li>无数据编辑权限</li>
+          <li>无系统配置权限</li>
+        </ul>
+      </div>
+    </div>
+
     <div class="search-bar card">
       <el-form :inline="true" :model="queryParams" class="search-form">
         <el-form-item>
@@ -342,24 +385,117 @@ onMounted(fetchData)
     margin-bottom: 24px;
 
     h1 {
-      font-size: 24px;
+      font-size: var(--fs-xl);
       font-weight: 600;
       color: var(--text-primary);
     }
 
     .text-muted {
       margin-top: 4px;
-      font-size: 14px;
+      font-size: var(--fs-base);
       color: var(--text-muted);
+    }
+  }
+
+  .role-desc-cards {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 16px;
+    margin-bottom: 24px;
+
+    .role-card {
+      background: var(--card-bg);
+      border: 1px solid var(--border-color);
+      border-radius: var(--radius-lg);
+      padding: 20px;
+      box-shadow: var(--shadow-xs);
+      transition: all var(--transition-fast);
+
+      &:hover {
+        box-shadow: var(--shadow-sm);
+        border-color: var(--primary);
+      }
+
+      .role-header {
+        display: flex;
+        align-items: center;
+        margin-bottom: 16px;
+        padding-bottom: 12px;
+        border-bottom: 1px solid var(--border-light);
+
+        .role-icon {
+          width: 36px;
+          height: 36px;
+          border-radius: var(--radius-sm);
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          font-weight: 600;
+          font-size: var(--fs-md);
+          margin-right: 12px;
+
+          &.admin {
+            background-color: var(--danger-bg);
+            color: var(--danger);
+          }
+
+          &.operator {
+            background-color: var(--warning-bg);
+            color: var(--warning);
+          }
+
+          &.viewer {
+            background-color: var(--primary-bg);
+            color: var(--primary);
+          }
+        }
+
+        .role-title {
+          font-size: var(--fs-md);
+          font-weight: 600;
+          color: var(--text-primary);
+        }
+      }
+
+      .role-features {
+        list-style: none;
+        padding: 0;
+        margin: 0;
+
+        li {
+          position: relative;
+          padding-left: 16px;
+          margin-bottom: 8px;
+          font-size: var(--fs-sm);
+          color: var(--text-secondary);
+          line-height: 1.6;
+
+          &::before {
+            content: '';
+            position: absolute;
+            left: 0;
+            top: 9px;
+            width: 4px;
+            height: 4px;
+            border-radius: 50%;
+            background-color: var(--text-muted);
+          }
+
+          &:last-child {
+            margin-bottom: 0;
+          }
+        }
+      }
     }
   }
 
   .card {
     background: var(--card-bg);
     border: 1px solid var(--border-color);
-    border-radius: 12px;
+    border-radius: var(--radius-lg);
     padding: 20px;
     margin-bottom: 16px;
+    box-shadow: var(--shadow-xs);
   }
 
   .search-bar {
@@ -375,8 +511,14 @@ onMounted(fetchData)
   }
 
   .table-card {
+    border-radius: var(--radius-lg);
+    border: 1px solid var(--border-color);
+
     :deep(.el-table) {
-      --el-table-header-bg-color: var(--bg-color);
+      --el-table-header-bg-color: var(--gray-50);
+      --el-table-border-color: var(--border-light);
+      --el-table-row-hover-bg-color: var(--primary-bg);
+      border-radius: var(--radius-lg);
     }
   }
 
@@ -384,6 +526,8 @@ onMounted(fetchData)
     display: flex;
     justify-content: flex-end;
     margin-top: 16px;
+    padding-top: 16px;
+    border-top: 1px solid var(--border-light);
   }
 }
 </style>

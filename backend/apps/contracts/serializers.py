@@ -231,6 +231,7 @@ class ContractListSerializer(serializers.ModelSerializer):
     payment_status_display = serializers.CharField(source='get_payment_status_display', read_only=True)
     approval_status_display = serializers.CharField(source='get_approval_status_display', read_only=True)
     renewal_status_display = serializers.CharField(source='get_renewal_status_display', read_only=True)
+    overdue_days = serializers.SerializerMethodField()
 
     class Meta:
         model = Contract
@@ -241,5 +242,20 @@ class ContractListSerializer(serializers.ModelSerializer):
             'approval_status', 'approval_status_display',
             'renewal_status', 'renewal_status_display',
             'quality_score', 'salesperson', 'department',
-            'created_by_name', 'created_at',
+            'created_by_name', 'created_at', 'overdue_days',
         ]
+
+    def get_overdue_days(self, obj):
+        from django.utils import timezone
+        today = timezone.now().date()
+        max_days = 0
+        for plan in obj.payment_plans.all():
+            if plan.status in (PaymentPlan.Status.OVERDUE, PaymentPlan.Status.SEVERE_OVERDUE):
+                days = (today - plan.due_date).days if plan.due_date else 0
+                if days > max_days:
+                    max_days = days
+            elif plan.status == PaymentPlan.Status.PENDING and plan.due_date and plan.due_date < today:
+                days = (today - plan.due_date).days
+                if days > max_days:
+                    max_days = days
+        return max_days

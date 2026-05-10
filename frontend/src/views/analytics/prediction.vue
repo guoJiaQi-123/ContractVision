@@ -2,6 +2,7 @@
 import { ref, reactive, onMounted } from 'vue'
 import { ElMessage } from 'element-plus'
 import { getSalesPrediction, getCustomerValue, getAnomalyDetection } from '@/api/analytics'
+import DESIGN_COLORS from '@/utils/colors'
 import VChart from 'vue-echarts'
 import { use } from 'echarts/core'
 import { CanvasRenderer } from 'echarts/renderers'
@@ -78,7 +79,7 @@ const getPredictionChartOption = () => {
         type: 'line',
         data: [...history.amounts.map(Number), ...new Array(prediction.months.length).fill(null)],
         smooth: true,
-        itemStyle: { color: '#165DFF' }
+        itemStyle: { color: DESIGN_COLORS.primary }
       },
       {
         name: '预测金额',
@@ -103,7 +104,7 @@ const getCustomerPieOption = () => {
       type: 'pie',
       radius: ['40%', '70%'],
       data: [
-        { value: segments.high, name: '高价值', itemStyle: { color: '#F53F3F' } },
+        { value: segments.high, name: '高价值', itemStyle: { color: DESIGN_COLORS.danger } },
         { value: segments.medium, name: '中价值', itemStyle: { color: '#F7BA1E' } },
         { value: segments.low, name: '低价值', itemStyle: { color: '#86909C' } }
       ]
@@ -230,22 +231,114 @@ onMounted(() => {
 
 <style lang="scss" scoped>
 .prediction-container {
+  min-height: 100%;
+
   .page-header {
     margin-bottom: 24px;
-    h1 { font-size: 24px; font-weight: 600; color: var(--text-primary); }
-    .text-muted { margin-top: 4px; font-size: 14px; color: var(--text-muted); }
-  }
-  .card {
-    background: var(--card-bg); border: 1px solid var(--border-color);
-    border-radius: 12px; padding: 24px; margin-bottom: 16px;
-  }
-  .stat-card {
-    background: var(--bg-color, #f7f8fa); border-radius: 8px; padding: 16px;
-    display: flex; flex-direction: column; gap: 6px;
-    .stat-label { font-size: 13px; color: var(--text-muted); }
-    .stat-value { font-size: 20px; font-weight: 600; color: var(--text-primary);
-      &.danger { color: #F53F3F; }
+
+    h1 {
+      font-size: var(--fs-xl);
+      font-weight: 600;
+      color: var(--text-primary);
+      line-height: 1.4;
     }
+
+    .text-muted {
+      margin-top: 4px;
+      font-size: var(--fs-base);
+      color: var(--text-muted);
+    }
+  }
+
+  .card {
+    background: var(--card-bg);
+    border: 1px solid var(--border-color);
+    border-radius: var(--radius-lg);
+    padding: 24px;
+    margin-bottom: 16px;
+    box-shadow: var(--shadow-sm);
+    transition: box-shadow var(--transition-fast);
+  }
+
+  .stat-card {
+    background: var(--bg-color);
+    border: 1px solid var(--border-light);
+    border-radius: var(--radius-md);
+    padding: 16px;
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    transition: box-shadow var(--transition-fast), border-color var(--transition-fast);
+
+    &:hover {
+      box-shadow: var(--shadow-md);
+      border-color: var(--border-color);
+    }
+
+    .stat-label {
+      font-size: var(--fs-sm);
+      color: var(--text-muted);
+      line-height: 1.5;
+    }
+
+    .stat-value {
+      font-size: var(--fs-lg);
+      font-weight: 600;
+      color: var(--text-primary);
+      line-height: 1.4;
+
+      &.danger {
+        color: var(--danger);
+      }
+    }
+  }
+
+  :deep(.el-tabs__nav-wrap::after) {
+    background-color: var(--border-light);
+  }
+
+  :deep(.el-tabs__item) {
+    font-size: var(--fs-base);
+    color: var(--text-secondary);
+    transition: color var(--transition-fast);
+
+    &.is-active {
+      color: var(--primary);
+    }
+
+    &:hover {
+      color: var(--primary-light);
+    }
+  }
+
+  :deep(.el-tabs__active-bar) {
+    background-color: var(--primary);
+  }
+
+  :deep(.el-form-item__label) {
+    font-size: var(--fs-sm);
+    color: var(--text-secondary);
+  }
+
+  :deep(.el-table) {
+    --el-table-border-color: var(--border-light);
+    --el-table-header-bg-color: var(--bg-color);
+
+    th.el-table__cell {
+      font-size: var(--fs-sm);
+      color: var(--text-secondary);
+      font-weight: 500;
+    }
+
+    td.el-table__cell {
+      font-size: var(--fs-sm);
+      color: var(--text-primary);
+    }
+  }
+
+  :deep(.el-empty__description p) {
+    font-size: var(--fs-base);
+    color: var(--text-muted);
   }
 }
 </style>

@@ -122,15 +122,33 @@ const handleExport = async (format) => {
 .report-container {
   .page-header {
     margin-bottom: 24px;
-    h1 { font-size: 24px; font-weight: 600; color: var(--text-primary); }
-    .text-muted { margin-top: 4px; font-size: 14px; color: var(--text-muted); }
+
+    h1 {
+      font-size: var(--fs-xl);
+      font-weight: 600;
+      color: var(--text-primary);
+    }
+
+    .text-muted {
+      margin-top: 4px;
+      font-size: var(--fs-base);
+      color: var(--text-muted);
+    }
   }
+
   .card {
-    background: var(--card-bg); border: 1px solid var(--border-color);
-    border-radius: 12px; padding: 24px;
+    background: var(--card-bg);
+    border: 1px solid var(--border-color);
+    border-radius: var(--radius-lg);
+    padding: 24px;
+    box-shadow: var(--shadow-xs);
   }
+
   .report-title {
-    font-size: 18px; font-weight: 600; color: var(--text-primary); margin-bottom: 16px;
+    font-size: var(--fs-lg);
+    font-weight: 600;
+    color: var(--text-primary);
+    margin-bottom: 16px;
   }
 }
 </style>

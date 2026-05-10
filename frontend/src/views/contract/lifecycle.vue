@@ -73,6 +73,23 @@ const selectedContract = computed(() => {
   return contractOptions.value.find(item => item.id === selectedContractId.value) || {}
 })
 
+const heroSummary = computed(() => {
+  const parts = []
+  const rate = fulfillment.value.completion_rate
+  if (rate !== undefined && rate !== null) parts.push(`履约率 ${rate}%`)
+  const risk = fulfillment.value.risk_count
+  if (risk) parts.push(`风险节点 ${risk}`)
+  const pending = paymentOverview.value.pending_count
+  if (pending) parts.push(`待付款 ${pending}`)
+  const overdue = paymentOverview.value.overdue_count
+  if (overdue) parts.push(`逾期 ${overdue}`)
+  const expiring = renewalSummary.value.summary?.expiring_soon
+  if (expiring) parts.push(`临近到期 ${expiring}`)
+  const score = contractDetail.value.quality_score
+  if (score !== undefined && score !== null) parts.push(`质量评分 ${score}`)
+  return parts.length ? parts.join(' · ') : '加载中...'
+})
+
 const loadContracts = async () => {
   const res = await getContractList({ page: 1, page_size: 200 })
   const list = res.data?.results || res.data?.list || res.data || []
@@ -249,7 +266,7 @@ onMounted(async () => {
   <div class="lifecycle-page">
     <div class="hero-card">
       <div>
-        <div class="eyebrow">F021 - F025 / F029 - F030</div>
+        <div class="eyebrow">{{ heroSummary }}</div>
         <h1>合同履约中心</h1>
         <p>集中管理履约节点、分期回款、续签到期、变更审批、终止归档与数据质量治理。</p>
       </div>
@@ -514,10 +531,10 @@ onMounted(async () => {
 .hero-card,
 .metric-card,
 .panel {
-  background: linear-gradient(180deg, rgba(255, 255, 255, 0.98), rgba(247, 249, 252, 0.98));
-  border: 1px solid rgba(17, 24, 39, 0.08);
-  border-radius: 18px;
-  box-shadow: 0 18px 40px rgba(15, 23, 42, 0.06);
+  background: var(--card-bg);
+  border: 1px solid var(--border-light);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-md);
 }
 
 .hero-card {
@@ -529,18 +546,18 @@ onMounted(async () => {
 
   h1 {
     margin: 6px 0;
-    font-size: 28px;
+    font-size: var(--fs-xl);
   }
 
   p {
     margin: 0;
-    color: #526072;
+    color: var(--text-secondary);
   }
 }
 
 .eyebrow {
-  color: #165dff;
-  font-size: 12px;
+  color: var(--primary);
+  font-size: var(--fs-xs);
   letter-spacing: 0.12em;
   text-transform: uppercase;
 }
@@ -558,14 +575,14 @@ onMounted(async () => {
   margin-bottom: 16px;
 
   strong {
-    font-size: 30px;
-    color: #0f172a;
+    font-size: var(--fs-xl);
+    color: var(--text-primary);
   }
 }
 
 .metric-label {
-  color: #64748b;
-  font-size: 13px;
+  color: var(--text-muted);
+  font-size: var(--fs-sm);
 }
 
 .panel {
@@ -582,13 +599,13 @@ onMounted(async () => {
 
   h3 {
     margin: 0 0 4px;
-    font-size: 18px;
+    font-size: var(--fs-lg);
   }
 
   p {
     margin: 0;
-    color: #6b7280;
-    font-size: 13px;
+    color: var(--text-muted);
+    font-size: var(--fs-sm);
   }
 }
 
@@ -606,31 +623,31 @@ onMounted(async () => {
 }
 
 .summary-item {
-  background: rgba(22, 93, 255, 0.06);
-  border-radius: 14px;
+  background: var(--primary-bg);
+  border-radius: var(--radius-md);
   padding: 14px 16px;
 
   span {
     display: block;
-    color: #64748b;
+    color: var(--text-muted);
     margin-bottom: 8px;
-    font-size: 13px;
+    font-size: var(--fs-sm);
   }
 
   strong {
-    font-size: 24px;
+    font-size: var(--fs-lg);
   }
 }
 
 .empty-state {
   padding: 28px;
   text-align: center;
-  color: #64748b;
+  color: var(--text-muted);
 }
 
 .duplicate-group {
-  border: 1px dashed rgba(22, 93, 255, 0.25);
-  border-radius: 14px;
+  border: 1px dashed var(--primary-light);
+  border-radius: var(--radius-md);
   padding: 14px;
   margin-bottom: 12px;
 }
@@ -644,8 +661,8 @@ onMounted(async () => {
 
   span {
     margin-left: 8px;
-    color: #64748b;
-    font-size: 13px;
+    color: var(--text-muted);
+    font-size: var(--fs-sm);
   }
 }
 
@@ -658,9 +675,9 @@ onMounted(async () => {
 .duplicate-chip {
   padding: 6px 10px;
   border-radius: 999px;
-  background: rgba(15, 23, 42, 0.06);
-  color: #334155;
-  font-size: 12px;
+  background: var(--gray-100);
+  color: var(--text-secondary);
+  font-size: var(--fs-xs);
 }
 
 @media (max-width: 960px) {

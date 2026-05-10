@@ -1,8 +1,24 @@
 from django.conf import settings
 from django.db import models
 
+from core.mixins import TimeStampMixin
+
 
 class OperationLog(models.Model):
+    class Category(models.TextChoices):
+        OPERATION = 'operation', '操作日志'
+        ERROR = 'error', '错误日志'
+        SYSTEM = 'system', '系统日志'
+        SECURITY = 'security', '安全日志'
+        CONTRACT = 'contract', '合同日志'
+
+    class Level(models.TextChoices):
+        DEBUG = 'debug', 'DEBUG'
+        INFO = 'info', 'INFO'
+        WARNING = 'warning', 'WARNING'
+        ERROR = 'error', 'ERROR'
+        CRITICAL = 'critical', 'CRITICAL'
+
     user = models.ForeignKey(
         settings.AUTH_USER_MODEL,
         on_delete=models.SET_NULL,
@@ -12,7 +28,7 @@ class OperationLog(models.Model):
         verbose_name='操作用户',
     )
     ip_address = models.GenericIPAddressField(null=True, blank=True, verbose_name='IP地址')
-    action = models.CharField(max_length=20, verbose_name='操作类型')
+    action = models.CharField(max_length=50, verbose_name='操作类型')
     target = models.CharField(max_length=200, blank=True, default='', verbose_name='操作对象')
     detail = models.TextField(blank=True, default='', verbose_name='操作详情')
     before_data = models.JSONField(default=dict, blank=True, verbose_name='操作前数据')
@@ -20,6 +36,21 @@ class OperationLog(models.Model):
     method = models.CharField(max_length=10, blank=True, default='', verbose_name='请求方法')
     path = models.CharField(max_length=500, blank=True, default='', verbose_name='请求路径')
     status_code = models.IntegerField(null=True, blank=True, verbose_name='响应状态码')
+    category = models.CharField(
+        max_length=20,
+        choices=Category.choices,
+        default=Category.OPERATION,
+        verbose_name='日志分类',
+    )
+    level = models.CharField(
+        max_length=20,
+        choices=Level.choices,
+        default=Level.INFO,
+        verbose_name='日志级别',
+    )
+    duration_ms = models.IntegerField(null=True, blank=True, verbose_name='耗时(ms)')
+    user_agent = models.CharField(max_length=500, blank=True, default='', verbose_name='User-Agent')
+    module = models.CharField(max_length=50, blank=True, default='', verbose_name='功能模块')
     created_at = models.DateTimeField(auto_now_add=True, verbose_name='创建时间')
 
     class Meta:
@@ -27,6 +58,13 @@ class OperationLog(models.Model):
         verbose_name = '操作日志'
         verbose_name_plural = verbose_name
         ordering = ['-created_at']
+        indexes = [
+            models.Index(fields=['-created_at'], name='idx_oplog_created'),
+            models.Index(fields=['category', '-created_at'], name='idx_oplog_cat'),
+            models.Index(fields=['level', '-created_at'], name='idx_oplog_level'),
+            models.Index(fields=['action', '-created_at'], name='idx_oplog_action'),
+            models.Index(fields=['user', '-created_at'], name='idx_oplog_user'),
+        ]
 
     def __str__(self):
         return f'{self.user} - {self.action} - {self.target}'
@@ -301,3 +339,69 @@ class StampTaxRule(models.Model):
 
     def __str__(self):
         return self.contract_type
+
+
+class Department(TimeStampMixin):
+    name = models.CharField(max_length=100, verbose_name='部门名称')
+    code = models.CharField(max_length=50, unique=True, verbose_name='部门编码')
+    parent = models.ForeignKey('self', on_delete=models.SET_NULL, null=True, blank=True, related_name='children', verbose_name='上级部门')
+    manager = models.CharField(max_length=50, blank=True, default='', verbose_name='部门负责人')
+    description = models.TextField(blank=True, default='', verbose_name='描述')
+    is_active = models.BooleanField(default=True, verbose_name='是否启用')
+    sort_order = models.PositiveIntegerField(default=0, verbose_name='排序')
+
+    class Meta:
+        db_table = 'biz_department'
+        verbose_name = '部门'
+        verbose_name_plural = verbose_name
+        ordering = ['sort_order', 'id']
+
+    def __str__(self):
+        return self.name
+
+
+class ProductType(TimeStampMixin):
+    name = models.CharField(max_length=100, verbose_name='产品类型名称')
+    code = models.CharField(max_length=50, unique=True, verbose_name='产品类型编码')
+    category = models.CharField(max_length=50, blank=True, default='', verbose_name='产品分类')
+    description = models.TextField(blank=True, default='', verbose_name='描述')
+    is_active = models.BooleanField(default=True, verbose_name='是否启用')
+    sort_order = models.PositiveIntegerField(default=0, verbose_name='排序')
+
+    class Meta:
+        db_table = 'biz_product_type'
+        verbose_name = '产品类型'
+        verbose_name_plural = verbose_name
+        ordering = ['sort_order', 'id']
+
+    def __str__(self):
+        return self.name
+
+
+class Customer(TimeStampMixin):
+    class CustomerLevel(models.TextChoices):
+        VIP = 'vip', 'VIP客户'
+        NORMAL = 'normal', '普通客户'
+        POTENTIAL = 'potential', '潜在客户'
+
+    name = models.CharField(max_length=200, verbose_name='客户名称')
+    code = models.CharField(max_length=50, unique=True, verbose_name='客户编码')
+    short_name = models.CharField(max_length=100, blank=True, default='', verbose_name='客户简称')
+    level = models.CharField(max_length=20, choices=CustomerLevel.choices, default=CustomerLevel.NORMAL, verbose_name='客户等级')
+    contact_person = models.CharField(max_length=50, blank=True, default='', verbose_name='联系人')
+    contact_phone = models.CharField(max_length=20, blank=True, default='', verbose_name='联系电话')
+    contact_email = models.CharField(max_length=100, blank=True, default='', verbose_name='联系邮箱')
+    address = models.CharField(max_length=300, blank=True, default='', verbose_name='地址')
+    region = models.CharField(max_length=50, blank=True, default='', verbose_name='区域')
+    industry = models.CharField(max_length=50, blank=True, default='', verbose_name='行业')
+    description = models.TextField(blank=True, default='', verbose_name='描述')
+    is_active = models.BooleanField(default=True, verbose_name='是否启用')
+
+    class Meta:
+        db_table = 'biz_customer'
+        verbose_name = '客户'
+        verbose_name_plural = verbose_name
+        ordering = ['-created_at']
+
+    def __str__(self):
+        return self.name

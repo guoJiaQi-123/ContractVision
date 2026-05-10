@@ -147,16 +147,18 @@ const handleSubmit = async () => {
   display: flex;
   align-items: center;
   justify-content: center;
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  background: var(--bg-color);
   padding: 20px;
+  font-family: var(--font-sans);
 }
 
 .forgot-password-card {
   width: 420px;
-  background: #ffffff;
-  border-radius: 16px;
+  background: var(--card-bg);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-lg);
   padding: 40px;
-  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.15);
+  box-shadow: var(--shadow-md);
 
   .card-header {
     text-align: center;
@@ -166,8 +168,8 @@ const handleSubmit = async () => {
       width: 56px;
       height: 56px;
       margin: 0 auto 16px;
-      background: linear-gradient(135deg, #165DFF 0%, #4080FF 100%);
-      border-radius: 14px;
+      background: var(--primary);
+      border-radius: var(--radius-md);
       display: flex;
       align-items: center;
       justify-content: center;
@@ -177,14 +179,59 @@ const handleSubmit = async () => {
     h2 {
       font-size: 22px;
       font-weight: 600;
-      color: #1D2129;
+      color: var(--text-primary);
       margin-bottom: 8px;
     }
 
     p {
       font-size: 14px;
-      color: #86909C;
+      color: var(--text-muted);
     }
+  }
+
+  :deep(.el-form-item) {
+    margin-bottom: 20px;
+  }
+
+  :deep(.el-input) {
+    .el-input__wrapper {
+      padding: 4px 12px;
+      border-radius: var(--radius-sm);
+      border: 1px solid var(--border-color);
+      box-shadow: none;
+      transition: border-color var(--transition-fast), box-shadow var(--transition-fast);
+
+      &:hover {
+        border-color: var(--primary);
+      }
+
+      &:focus-within {
+        border-color: var(--primary);
+        box-shadow: 0 0 0 3px var(--primary-bg);
+      }
+    }
+  }
+
+  :deep(.el-button--primary) {
+    width: 100%;
+    height: 48px;
+    border-radius: var(--radius-md);
+    font-size: 16px;
+    font-weight: 500;
+    background: var(--primary);
+    border-color: var(--primary);
+    transition: background var(--transition-fast), border-color var(--transition-fast);
+
+    &:hover {
+      background: var(--primary-light);
+      border-color: var(--primary-light);
+    }
+  }
+
+  :deep(.el-form-item__label) {
+    font-size: 14px;
+    font-weight: 500;
+    color: var(--text-secondary);
   }
 
   .form-footer {
@@ -192,12 +239,14 @@ const handleSubmit = async () => {
     margin-top: 16px;
 
     a {
-      color: #165DFF;
+      color: var(--primary);
       text-decoration: none;
       font-size: 14px;
+      font-weight: 500;
+      transition: color var(--transition-fast);
 
       &:hover {
-        color: #4080FF;
+        color: var(--primary-light);
       }
     }
   }

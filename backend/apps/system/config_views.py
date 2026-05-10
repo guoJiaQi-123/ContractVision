@@ -2,7 +2,8 @@ import csv
 from datetime import timedelta
 from decimal import Decimal
 
-from django.db.models import Q, Sum
+from django.db.models import Count, Q, Sum
+from django.db.models.functions import TruncMonth
 from django.http import HttpResponse
 from django.utils import timezone
 from rest_framework import mixins
@@ -548,11 +549,60 @@ def get_client_ip(request):
     return request.META.get("REMOTE_ADDR")
 
 
+MODULE_PREFIX_MAP = [
+    ("/api/v1/contracts/", "contracts"),
+    ("/api/v1/users/", "users"),
+    ("/api/v1/auth/", "auth"),
+    ("/api/v1/system/", "system"),
+]
+
+
+def resolve_module(path):
+    for prefix, module_name in MODULE_PREFIX_MAP:
+        if path.startswith(prefix):
+            return module_name
+    return ""
+
+
 def create_operation_log(
-    request, action, target, detail, before_data=None, after_data=None, status_code=200
+    request,
+    action,
+    target,
+    detail,
+    before_data=None,
+    after_data=None,
+    status_code=200,
+    category=None,
+    level=None,
+    module=None,
 ):
     if not getattr(request, "user", None) or not request.user.is_authenticated:
         return
+    from .models import OperationLog
+
+    if category is None:
+        if action in ("LOGIN", "LOGOUT", "LOGIN_FAILED"):
+            category = OperationLog.Category.SECURITY
+        elif action in ("ALERT_SCAN", "ALERT_PROCESS", "ALERT_REASSIGN"):
+            category = OperationLog.Category.SYSTEM
+        elif status_code and status_code >= 500:
+            category = OperationLog.Category.ERROR
+        elif request.path.startswith("/api/v1/contracts/"):
+            category = OperationLog.Category.CONTRACT
+        else:
+            category = OperationLog.Category.OPERATION
+
+    if level is None:
+        if status_code and status_code >= 500:
+            level = OperationLog.Level.ERROR
+        elif status_code and status_code >= 400:
+            level = OperationLog.Level.WARNING
+        else:
+            level = OperationLog.Level.INFO
+
+    if module is None:
+        module = resolve_module(request.path)
+
     OperationLog.objects.create(
         user=request.user,
         ip_address=get_client_ip(request),
@@ -564,6 +614,9 @@ def create_operation_log(
         method=request.method,
         path=request.path,
         status_code=status_code,
+        category=category,
+        level=level,
+        module=module,
     )
 
 
@@ -1626,26 +1679,146 @@ class MobileDashboardView(APIView):
     permission_classes = [IsAuthenticated]
 
     def get(self, request):
-        config = (
-            DashboardConfig.objects.filter(is_mobile=True, is_active=True)
-            .order_by("-updated_at")
-            .first()
-        )
+        now = timezone.now()
+        today = now.date()
+        month_start = now.replace(day=1, hour=0, minute=0, second=0, microsecond=0)
         contracts = Contract.objects.all()
+
+        total_contracts = contracts.count()
+        total_amount = contracts.aggregate(total=Sum("base_amount"))["total"] or 0
+        pending_alerts = AlertMessage.objects.filter(
+            status=AlertMessage.Status.PENDING
+        ).count()
+        expiring_contracts = contracts.filter(
+            end_date__isnull=False,
+            end_date__lte=today + timedelta(days=30),
+            end_date__gte=today,
+        ).count()
+        month_new = contracts.filter(created_at__gte=month_start).count()
+        month_amount = (
+            contracts.filter(created_at__gte=month_start).aggregate(
+                total=Sum("base_amount")
+            )["total"]
+            or 0
+        )
+
+        status_dist = list(
+            contracts.values("status")
+            .annotate(count=Count("id"), amount=Sum("base_amount"))
+            .order_by("-count")
+        )
+        status_map = dict(Contract.Status.choices)
+        for item in status_dist:
+            item["label"] = status_map.get(item["status"], item["status"])
+
+        payment_dist = list(
+            contracts.values("payment_status")
+            .annotate(count=Count("id"))
+            .order_by("-count")
+        )
+        payment_map = dict(Contract.PaymentStatus.choices)
+        for item in payment_dist:
+            item["label"] = payment_map.get(
+                item["payment_status"], item["payment_status"]
+            )
+
+        delivery_dist = list(
+            contracts.values("delivery_status")
+            .annotate(count=Count("id"))
+            .order_by("-count")
+        )
+        delivery_map = dict(Contract.DeliveryStatus.choices)
+        for item in delivery_dist:
+            item["label"] = delivery_map.get(
+                item["delivery_status"], item["delivery_status"]
+            )
+
+        trend_data = (
+            contracts.extra(select={"month": "DATE_FORMAT(created_at, '%%Y-%%m')"})
+            .values("month")
+            .annotate(amount=Sum("base_amount"), count=Count("id"))
+            .order_by("month")
+        )
+        trend_map = {
+            item["month"]: {
+                "amount": float(item["amount"] or 0),
+                "count": item["count"],
+            }
+            for item in trend_data
+        }
+        months_labels = []
+        trend_amounts = []
+        trend_counts = []
+        for i in range(5, -1, -1):
+            y = month_start.year
+            m = month_start.month - i
+            while m <= 0:
+                m += 12
+                y -= 1
+            m_dt = month_start.replace(year=y, month=m, day=1)
+            label = m_dt.strftime("%Y-%m")
+            months_labels.append(label)
+            val = trend_map.get(label, {"amount": 0, "count": 0})
+            trend_amounts.append(val["amount"])
+            trend_counts.append(val["count"])
+
+        top_clients = list(
+            contracts.values("client_name")
+            .annotate(total=Sum("base_amount"), cnt=Count("id"))
+            .order_by("-total")[:5]
+        )
+        for item in top_clients:
+            item["total"] = float(item["total"] or 0)
+
+        recent_alerts = list(
+            AlertMessage.objects.filter(status=AlertMessage.Status.PENDING)
+            .order_by("-created_at")[:5]
+            .values("id", "title", "level", "created_at")
+        )
+
+        current_period = now.strftime("%Y-%m")
+        sales_target = SalesTarget.objects.filter(period_label=current_period).first()
+        target_amount = float(sales_target.target_amount) if sales_target else 0
+        target_progress = (
+            round(float(month_amount) / target_amount * 100, 1)
+            if target_amount > 0
+            else 0
+        )
+
+        overdue_payments = PaymentPlan.objects.filter(
+            status__in=[PaymentPlan.Status.OVERDUE, PaymentPlan.Status.SEVERE_OVERDUE]
+        ).count()
+
+        pending_renewals = contracts.filter(
+            renewal_status=Contract.RenewalStatus.PENDING
+        ).count()
+
         data = {
-            "config": DashboardConfigSerializer(config).data if config else None,
             "summary": {
-                "total_contracts": contracts.count(),
-                "total_amount": str(
-                    contracts.aggregate(total=Sum("base_amount"))["total"] or 0
-                ),
-                "pending_alerts": AlertMessage.objects.filter(
-                    status=AlertMessage.Status.PENDING
-                ).count(),
-                "expiring_contracts": contracts.filter(
-                    end_date__isnull=False,
-                    end_date__lte=timezone.now().date() + timedelta(days=30),
-                ).count(),
+                "total_contracts": total_contracts,
+                "total_amount": str(total_amount),
+                "pending_alerts": pending_alerts,
+                "expiring_contracts": expiring_contracts,
+                "month_new": month_new,
+                "month_amount": str(month_amount),
+                "overdue_payments": overdue_payments,
+                "pending_renewals": pending_renewals,
+            },
+            "status_distribution": status_dist,
+            "payment_distribution": payment_dist,
+            "delivery_distribution": delivery_dist,
+            "trend": {
+                "months": months_labels,
+                "amounts": trend_amounts,
+                "counts": trend_counts,
+            },
+            "top_clients": top_clients,
+            "recent_alerts": recent_alerts,
+            "sales_target": {
+                "period": current_period,
+                "target": target_amount,
+                "actual": float(month_amount),
+                "progress": target_progress,
             },
         }
         return success_response(data=data)

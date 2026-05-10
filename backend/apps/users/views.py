@@ -149,3 +149,11 @@ class UserManagementViewSet(viewsets.ModelViewSet):
             data=UserSerializer(user).data,
             message=f'角色已更新为{dict(User.Role.choices)[role]}',
         )
+
+    @action(detail=False, methods=['get'])
+    def salesperson_list(self, request):
+        users = User.objects.filter(
+            role__in=[User.Role.ADMIN, User.Role.OPERATOR],
+            is_active=True
+        ).values('id', 'username', 'role', 'department').order_by('username')
+        return success_response(data=list(users))

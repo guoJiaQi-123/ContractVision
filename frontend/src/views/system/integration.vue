@@ -191,13 +191,30 @@ onMounted(fetchData)
 <style lang="scss" scoped>
 .integration-container {
   .page-header {
-    display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 24px;
-    h1 { font-size: 24px; font-weight: 600; color: var(--text-primary); }
-    .text-muted { margin-top: 4px; font-size: 14px; color: var(--text-muted); }
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    margin-bottom: 24px;
+
+    h1 {
+      font-size: var(--fs-xl);
+      font-weight: 600;
+      color: var(--text-primary);
+    }
+
+    .text-muted {
+      margin-top: 4px;
+      font-size: var(--fs-base);
+      color: var(--text-muted);
+    }
   }
+
   .card {
-    background: var(--card-bg); border: 1px solid var(--border-color);
-    border-radius: 12px; padding: 20px;
+    background: var(--card-bg);
+    border: 1px solid var(--border-color);
+    border-radius: var(--radius-lg);
+    padding: 20px;
+    box-shadow: var(--shadow-xs);
   }
 }
 </style>

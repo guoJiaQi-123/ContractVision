@@ -222,28 +222,33 @@ onMounted(loadProfile)
 
 <style lang="scss" scoped>
 .profile-container {
+  min-height: 100%;
+
   .page-header {
     margin-bottom: 24px;
 
     h1 {
-      font-size: 24px;
+      font-size: var(--fs-xl);
       font-weight: 600;
       color: var(--text-primary);
+      line-height: 1.4;
     }
 
     .text-muted {
       margin-top: 4px;
-      font-size: 14px;
+      font-size: var(--fs-sm);
       color: var(--text-muted);
+      line-height: 1.5;
     }
   }
 
   .card {
     background: var(--card-bg);
     border: 1px solid var(--border-color);
-    border-radius: 12px;
+    border-radius: var(--radius-lg);
     padding: 24px;
     margin-bottom: 16px;
+    transition: box-shadow var(--transition-fast);
   }
 
   .user-card {
@@ -253,20 +258,87 @@ onMounted(loadProfile)
       width: 80px;
       height: 80px;
       margin: 0 auto 16px;
-      background: linear-gradient(135deg, #165DFF, #4080FF);
+      background: var(--primary);
       border-radius: 50%;
       display: flex;
       align-items: center;
       justify-content: center;
       color: #ffffff;
+      transition: background var(--transition-fast);
     }
 
     h3 {
-      font-size: 18px;
+      font-size: var(--fs-md);
       font-weight: 600;
       color: var(--text-primary);
       margin-bottom: 8px;
     }
+
+    .user-descriptions {
+      :deep(.el-descriptions__label) {
+        color: var(--text-secondary);
+        font-size: var(--fs-sm);
+      }
+
+      :deep(.el-descriptions__content) {
+        color: var(--text-primary);
+        font-size: var(--fs-sm);
+      }
+    }
+  }
+
+  :deep(.el-tabs__nav-wrap::after) {
+    background-color: var(--border-color);
+  }
+
+  :deep(.el-tabs__active-bar) {
+    background-color: var(--primary);
+  }
+
+  :deep(.el-tabs__item) {
+    color: var(--text-secondary);
+    font-size: var(--fs-base);
+    transition: color var(--transition-fast);
+
+    &.is-active {
+      color: var(--primary);
+    }
+
+    &:hover {
+      color: var(--primary);
+    }
+  }
+
+  :deep(.el-form-item__label) {
+    color: var(--text-secondary);
+    font-size: var(--fs-sm);
+  }
+
+  :deep(.el-input__wrapper) {
+    border-radius: var(--radius-sm);
+    transition: box-shadow var(--transition-fast);
+  }
+
+  :deep(.el-button--primary) {
+    background-color: var(--primary);
+    border-color: var(--primary);
+    border-radius: var(--radius-sm);
+    transition: background-color var(--transition-fast), border-color var(--transition-fast);
+
+    &:hover,
+    &:focus {
+      background-color: var(--primary-light);
+      border-color: var(--primary-light);
+    }
+
+    &:active {
+      background-color: var(--primary-dark);
+      border-color: var(--primary-dark);
+    }
+  }
+
+  :deep(.el-tag) {
+    border-radius: var(--radius-xs);
   }
 }
 </style>

@@ -379,18 +379,16 @@ onMounted(async () => {
 
 <template>
   <div class="alerts-page">
-    <section class="hero-section">
-      <div class="hero-copy">
-        <div class="eyebrow">F031 关键节点智能预警</div>
-        <h1>预警工作台</h1>
-        <p>把付款到期、交付逾期、合同到期与目标偏差集中到一个视图里，支持筛选、批量处理、详情抽屉跟踪与管理员重分派。</p>
-      </div>
-      <div class="hero-side">
-        <div class="radar-card">
-          <div class="radar-label">7天内风险密度</div>
-          <div class="radar-value">{{ summary.week_count || 0 }}</div>
-          <div class="radar-subtitle">条事项待在本周内完成处理</div>
+    <section class="page-header">
+      <div class="header-main">
+        <div class="header-title-row">
+          <h1>预警工作台</h1>
+          <div class="risk-badge">
+            <span class="risk-dot" />
+            <span>近7日风险密度：{{ summary.week_count || 0 }} 条</span>
+          </div>
         </div>
+        <p class="header-desc">付款到期、交付逾期、合同到期与目标偏差集中视图 — 支持筛选、批量处理、详情抽屉跟踪与管理员重分派。</p>
       </div>
     </section>
 
@@ -402,15 +400,17 @@ onMounted(async () => {
         :class="card.tone"
         @click="card.action"
       >
-        <div class="metric-icon">
-          <el-icon><component :is="card.icon" /></el-icon>
+        <div class="metric-icon-wrap">
+          <el-icon :size="18"><component :is="card.icon" /></el-icon>
         </div>
-        <div class="metric-title">{{ card.title }}</div>
-        <div class="metric-value">{{ card.value }}</div>
+        <div class="metric-body">
+          <span class="metric-title">{{ card.title }}</span>
+          <span class="metric-value">{{ card.value }}</span>
+        </div>
       </button>
     </section>
 
-    <section class="workspace-shell">
+    <section class="workspace-panel">
       <div class="workspace-toolbar">
         <div class="toolbar-left">
           <div class="toolbar-search">
@@ -479,7 +479,7 @@ onMounted(async () => {
           <span>共 {{ total }} 条预警，已选 {{ selectedRows.length }} 条</span>
         </div>
         <div class="selection-right">
-          <span class="muted">逾期事项 {{ summary.overdue_count || 0 }} 条</span>
+          <span class="muted">逾期 {{ summary.overdue_count || 0 }} 条</span>
           <span class="muted">总量 {{ summary.total_count || 0 }} 条</span>
         </div>
       </div>
@@ -498,8 +498,9 @@ onMounted(async () => {
           <template #default="{ row }">
             <div class="title-cell">
               <div class="title-line">
+                <span class="level-dot" :class="row.level" />
                 <span class="title-text">{{ row.title }}</span>
-                <el-tag :type="getLevelType(row.level)" effect="light" round size="small">
+                <el-tag :type="getLevelType(row.level)" effect="plain" size="small">
                   {{ getLevelLabel(row.level) }}
                 </el-tag>
               </div>
@@ -529,13 +530,13 @@ onMounted(async () => {
           <template #default="{ row }">
             <div class="due-cell">
               <span>{{ formatDueDate(row.due_date) }}</span>
-              <small>{{ getCountdownText(row) }}</small>
+              <small :class="{ overdue: getCountdownText(row).includes('逾期') }">{{ getCountdownText(row) }}</small>
             </div>
           </template>
         </el-table-column>
         <el-table-column label="状态" width="110">
           <template #default="{ row }">
-            <el-tag :type="getStatusType(row.status)" effect="light" round>
+            <el-tag :type="getStatusType(row.status)" effect="plain">
               {{ row.status_display }}
             </el-tag>
           </template>
@@ -579,7 +580,7 @@ onMounted(async () => {
     <el-drawer
       v-model="detailVisible"
       class="alert-drawer"
-      size="520px"
+      size="540px"
       destroy-on-close
       @closed="closeDrawer"
     >
@@ -592,8 +593,7 @@ onMounted(async () => {
           <el-tag
             v-if="detailData"
             :type="getStatusType(detailData.status)"
-            effect="light"
-            round
+            effect="plain"
           >
             {{ detailData.status_display }}
           </el-tag>
@@ -605,11 +605,11 @@ onMounted(async () => {
           <section class="drawer-hero">
             <div class="drawer-hero-main">
               <div class="drawer-type-row">
-                <el-tag :type="getLevelType(detailData.level)" effect="light" round>
+                <el-tag :type="getLevelType(detailData.level)" effect="plain" size="small">
                   {{ getLevelLabel(detailData.level) }}
                 </el-tag>
-                <span>{{ getTypeLabel(detailData.warning_type) }}</span>
-                <span>{{ detailData.contract_no || '通用事项' }}</span>
+                <span class="type-sep">{{ getTypeLabel(detailData.warning_type) }}</span>
+                <span class="type-sep">{{ detailData.contract_no || '通用事项' }}</span>
               </div>
               <p>{{ detailData.content || '请尽快处理该预警事项。' }}</p>
             </div>
@@ -626,9 +626,13 @@ onMounted(async () => {
               class="drawer-metric-card"
               :class="item.tone"
             >
-              <el-icon><component :is="item.icon" /></el-icon>
-              <strong>{{ item.value }}</strong>
-              <span>{{ item.label }}</span>
+              <div class="dm-icon">
+                <el-icon :size="16"><component :is="item.icon" /></el-icon>
+              </div>
+              <div class="dm-body">
+                <span class="dm-value">{{ item.value }}</span>
+                <span class="dm-label">{{ item.label }}</span>
+              </div>
             </div>
           </section>
 
@@ -665,7 +669,7 @@ onMounted(async () => {
             </div>
           </section>
 
-          <section v-if="contractSnapshot" class="detail-panel snapshot-panel">
+          <section v-if="contractSnapshot" class="detail-panel">
             <div class="panel-title">
               <el-icon><Document /></el-icon>
               合同快照
@@ -719,18 +723,18 @@ onMounted(async () => {
               <el-icon><Guide /></el-icon>
               来源解释
             </div>
-            <div class="activity-list explain-list">
-              <div class="activity-item">
-                <strong>{{ ownerStrategy?.catalog_title || '负责人分派策略' }}</strong>
-                <span>{{ ownerStrategy?.strategy_title || '系统自动匹配负责人' }}</span>
+            <div class="explain-list">
+              <div class="explain-row">
+                <span class="explain-key">{{ ownerStrategy?.catalog_title || '负责人分派策略' }}</span>
+                <span class="explain-val">{{ ownerStrategy?.strategy_title || '系统自动匹配负责人' }}</span>
               </div>
-              <div class="activity-item">
-                <strong>归属原因</strong>
-                <span>{{ ownerStrategy?.reason || '当前未生成负责人解释。' }}</span>
+              <div class="explain-row">
+                <span class="explain-key">归属原因</span>
+                <span class="explain-val">{{ ownerStrategy?.reason || '当前未生成负责人解释。' }}</span>
               </div>
-              <div class="activity-item">
-                <strong>触发原因</strong>
-                <span>{{ detailData?.trigger_summary || '当前未生成命中说明。' }}</span>
+              <div class="explain-row">
+                <span class="explain-key">触发原因</span>
+                <span class="explain-val">{{ detailData?.trigger_summary || '当前未生成命中说明。' }}</span>
               </div>
             </div>
           </section>
@@ -769,9 +773,9 @@ onMounted(async () => {
               最近操作
             </div>
             <div v-if="recentLogs.length" class="activity-list">
-              <div v-for="item in recentLogs" :key="item.id" class="activity-item">
-                <strong>{{ item.detail }}</strong>
-                <span>{{ item.username || '系统' }} · {{ formatDate(item.created_at, 'YYYY-MM-DD HH:mm:ss') }}</span>
+              <div v-for="item in recentLogs" :key="item.id" class="activity-row">
+                <span class="activity-detail">{{ item.detail }}</span>
+                <span class="activity-meta">{{ item.username || '系统' }} · {{ formatDate(item.created_at, 'YYYY-MM-DD HH:mm:ss') }}</span>
               </div>
             </div>
             <el-empty v-else description="暂无针对该预警的追踪记录" :image-size="72" />
@@ -814,211 +818,217 @@ onMounted(async () => {
   </div>
 </template>
 
-<style scoped lang="scss">
+<style lang="scss" scoped>
 .alerts-page {
   display: flex;
   flex-direction: column;
-  gap: 18px;
+  gap: 16px;
   padding-bottom: 12px;
 }
 
-.hero-section {
-  position: relative;
-  overflow: hidden;
-  display: grid;
-  grid-template-columns: minmax(0, 1.6fr) minmax(280px, 0.8fr);
-  gap: 16px;
-  padding: 30px;
-  border-radius: 28px;
-  background:
-    radial-gradient(circle at top left, rgba(72, 121, 255, 0.26), transparent 34%),
-    radial-gradient(circle at bottom right, rgba(255, 167, 38, 0.18), transparent 32%),
-    linear-gradient(135deg, #0f172a 0%, #131f38 48%, #1d3158 100%);
-  box-shadow: 0 30px 60px rgba(15, 23, 42, 0.16);
-  color: #f8fafc;
+.page-header {
+  padding: 24px 28px;
+  border-radius: var(--radius-md);
+  background: var(--gray-800);
+  border: 1px solid rgba(255, 255, 255, 0.06);
 }
 
-.hero-copy {
-  max-width: 760px;
+.header-main {
+  max-width: 960px;
+}
+
+.header-title-row {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  margin-bottom: 8px;
 
   h1 {
-    margin: 8px 0 10px;
-    font-size: 34px;
-    line-height: 1.08;
-    letter-spacing: -0.03em;
-  }
-
-  p {
     margin: 0;
-    max-width: 640px;
-    color: rgba(226, 232, 240, 0.8);
-    font-size: 15px;
-    line-height: 1.7;
+    font-size: var(--fs-xl);
+    font-weight: 600;
+    color: #fff;
+    letter-spacing: -0.01em;
   }
 }
 
-.eyebrow,
-.drawer-eyebrow {
+.risk-badge {
   display: inline-flex;
   align-items: center;
-  padding: 6px 10px;
-  border-radius: 999px;
-  background: rgba(255, 255, 255, 0.08);
-  color: #a5d8ff;
-  font-size: 12px;
-  letter-spacing: 0.16em;
-  text-transform: uppercase;
+  gap: 6px;
+  padding: 3px 10px;
+  border-radius: var(--radius-xs);
+  background: rgba(239, 68, 68, 0.12);
+  color: var(--danger);
+  font-size: var(--fs-xs);
+  font-weight: 500;
 }
 
-.hero-side {
-  display: flex;
-  align-items: stretch;
-  justify-content: flex-end;
+.risk-dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: var(--danger);
+  animation: pulse-dot 2s ease-in-out infinite;
 }
 
-.radar-card {
-  min-height: 180px;
-  width: 100%;
-  border-radius: 24px;
-  padding: 22px;
-  background:
-    linear-gradient(180deg, rgba(255, 255, 255, 0.12), rgba(255, 255, 255, 0.06)),
-    rgba(255, 255, 255, 0.03);
-  border: 1px solid rgba(255, 255, 255, 0.12);
-  backdrop-filter: blur(16px);
+@keyframes pulse-dot {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.4; }
 }
 
-.radar-label {
-  color: rgba(226, 232, 240, 0.76);
-  font-size: 13px;
-}
-
-.radar-value {
-  margin-top: 18px;
-  font-size: 56px;
-  font-weight: 700;
-  line-height: 1;
-}
-
-.radar-subtitle {
-  margin-top: 14px;
-  color: rgba(226, 232, 240, 0.7);
-  font-size: 13px;
+.header-desc {
+  margin: 0;
+  color: var(--gray-400);
+  font-size: var(--fs-sm);
+  line-height: 1.7;
 }
 
 .metric-grid {
   display: grid;
   grid-template-columns: repeat(4, minmax(0, 1fr));
-  gap: 14px;
+  gap: 12px;
 }
 
 .metric-card {
-  position: relative;
-  overflow: hidden;
-  text-align: left;
-  border: none;
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 16px 18px;
+  border-radius: var(--radius-sm);
+  background: var(--card-bg);
+  border: 1px solid var(--border-color);
   cursor: pointer;
-  padding: 18px;
-  border-radius: 22px;
-  background: #ffffff;
-  box-shadow: 0 18px 36px rgba(15, 23, 42, 0.06);
-  transition: transform 0.2s ease, box-shadow 0.2s ease;
+  text-align: left;
+  transition: border-color var(--transition-fast), box-shadow var(--transition-fast);
 
   &:hover {
-    transform: translateY(-3px);
-    box-shadow: 0 22px 40px rgba(15, 23, 42, 0.1);
+    border-color: var(--gray-300);
+    box-shadow: var(--shadow-sm);
   }
 
   &.blue {
-    background: linear-gradient(180deg, #f5f9ff 0%, #edf4ff 100%);
+    border-left: 3px solid var(--primary-dark);
+
+    .metric-icon-wrap {
+      background: var(--primary-bg);
+      color: var(--primary-dark);
+    }
   }
 
   &.red {
-    background: linear-gradient(180deg, #fff6f5 0%, #fff0ef 100%);
+    border-left: 3px solid var(--danger);
+
+    .metric-icon-wrap {
+      background: var(--danger-bg);
+      color: var(--danger);
+    }
   }
 
   &.amber {
-    background: linear-gradient(180deg, #fffaf1 0%, #fff4df 100%);
+    border-left: 3px solid var(--warning);
+
+    .metric-icon-wrap {
+      background: var(--warning-bg);
+      color: var(--warning);
+    }
   }
 
   &.green {
-    background: linear-gradient(180deg, #f4fff8 0%, #eafbf0 100%);
+    border-left: 3px solid var(--success);
+
+    .metric-icon-wrap {
+      background: var(--success-bg);
+      color: var(--success);
+    }
   }
 }
 
-.metric-icon,
-.drawer-metric-card .el-icon {
-  display: inline-flex;
+.metric-icon-wrap {
+  display: flex;
   align-items: center;
   justify-content: center;
-  width: 42px;
-  height: 42px;
-  border-radius: 14px;
-  background: rgba(15, 23, 42, 0.06);
-  color: #0f172a;
-  font-size: 18px;
+  width: 36px;
+  height: 36px;
+  border-radius: var(--radius-sm);
+  flex-shrink: 0;
+}
+
+.metric-body {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
 }
 
 .metric-title {
-  margin-top: 16px;
-  color: #64748b;
-  font-size: 13px;
+  color: var(--text-muted);
+  font-size: var(--fs-xs);
+  line-height: 1.4;
 }
 
 .metric-value {
-  margin-top: 10px;
-  font-size: 30px;
+  color: var(--gray-900);
+  font-size: var(--fs-2xl);
   font-weight: 700;
-  color: #0f172a;
+  line-height: 1.2;
+  font-variant-numeric: tabular-nums;
 }
 
-.workspace-shell {
-  border-radius: 28px;
-  background: linear-gradient(180deg, #ffffff 0%, #fbfdff 100%);
-  box-shadow: 0 22px 44px rgba(15, 23, 42, 0.06);
-  border: 1px solid rgba(15, 23, 42, 0.06);
+.workspace-panel {
+  border-radius: var(--radius-md);
+  background: var(--card-bg);
+  border: 1px solid var(--border-color);
   overflow: hidden;
 }
 
 .workspace-toolbar {
   display: flex;
   justify-content: space-between;
-  gap: 14px;
-  padding: 22px;
-  border-bottom: 1px solid rgba(148, 163, 184, 0.14);
+  gap: 12px;
+  padding: 16px 20px;
+  border-bottom: 1px solid var(--border-color);
+  background: var(--gray-50);
 }
 
 .toolbar-left {
-  display: grid;
-  grid-template-columns: minmax(260px, 1.5fr) repeat(4, minmax(120px, 0.7fr));
-  gap: 10px;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
   flex: 1;
+
+  :deep(.el-select) {
+    width: 110px;
+    flex-shrink: 0;
+  }
 }
 
 .owner-filter {
-  min-width: 220px;
+  width: 160px !important;
+  min-width: 160px;
 }
 
 .toolbar-right {
   display: flex;
-  gap: 10px;
+  gap: 8px;
   align-items: center;
 }
 
 .toolbar-search {
   position: relative;
+  width: 220px;
+  flex-shrink: 0;
 
   .el-icon {
     position: absolute;
-    left: 12px;
+    left: 10px;
     top: 50%;
     transform: translateY(-50%);
     z-index: 1;
-    color: #94a3b8;
+    color: var(--text-muted);
   }
 
   :deep(.el-input__wrapper) {
-    padding-left: 34px;
+    padding-left: 32px;
   }
 }
 
@@ -1026,52 +1036,69 @@ onMounted(async () => {
   display: flex;
   justify-content: space-between;
   gap: 12px;
-  padding: 0 22px 18px;
-  color: #475569;
-  font-size: 13px;
+  padding: 10px 20px;
+  border-bottom: 1px solid var(--border-light);
+  color: var(--gray-600);
+  font-size: var(--fs-xs);
 }
 
 .selection-left,
 .selection-right {
   display: flex;
   align-items: center;
-  gap: 12px;
+  gap: 10px;
 }
 
 .muted {
-  color: #94a3b8;
+  color: var(--text-muted);
 }
 
 .alerts-table {
   :deep(.el-table__header-wrapper th) {
-    background: rgba(248, 250, 252, 0.92);
-    color: #64748b;
+    background: var(--gray-50);
+    color: var(--gray-600);
     font-weight: 600;
+    font-size: var(--fs-xs);
+    text-transform: uppercase;
+    letter-spacing: 0.03em;
   }
 
   :deep(.el-table__row td) {
-    padding-top: 16px;
-    padding-bottom: 16px;
+    padding-top: 14px;
+    padding-bottom: 14px;
   }
+}
+
+.level-dot {
+  display: inline-block;
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  flex-shrink: 0;
+
+  &.high { background: var(--danger); }
+  &.medium { background: var(--warning); }
+  &.low { background: var(--primary); }
 }
 
 .title-cell {
   .title-line {
     display: flex;
     align-items: center;
-    gap: 10px;
-    margin-bottom: 6px;
+    gap: 8px;
+    margin-bottom: 4px;
   }
 
   .title-text {
-    color: #0f172a;
+    color: var(--text-primary);
     font-weight: 600;
+    font-size: var(--fs-base);
   }
 
   p {
     margin: 0;
-    color: #64748b;
-    font-size: 13px;
+    color: var(--text-muted);
+    font-size: var(--fs-xs);
     line-height: 1.6;
   }
 }
@@ -1080,16 +1107,20 @@ onMounted(async () => {
 .drawer-link {
   display: inline-flex;
   align-items: center;
-  gap: 6px;
+  gap: 4px;
   padding: 0;
   border: none;
   background: transparent;
-  color: #165dff;
+  color: var(--primary-dark);
   cursor: pointer;
-  font-weight: 600;
+  font-weight: 500;
+  font-size: var(--fs-sm);
+  transition: color var(--transition-fast);
+
+  &:hover { color: var(--primary); }
 
   &:disabled {
-    color: #94a3b8;
+    color: var(--text-muted);
     cursor: not-allowed;
   }
 }
@@ -1098,22 +1129,28 @@ onMounted(async () => {
 .due-cell {
   display: flex;
   flex-direction: column;
-  gap: 4px;
+  gap: 2px;
 
   span {
-    color: #0f172a;
+    color: var(--gray-800);
+    font-size: var(--fs-sm);
   }
 
   small {
-    color: #64748b;
-    font-size: 12px;
+    color: var(--text-muted);
+    font-size: var(--fs-xs);
+
+    &.overdue {
+      color: var(--danger);
+      font-weight: 500;
+    }
   }
 }
 
 .table-actions {
   display: flex;
   align-items: center;
-  gap: 8px;
+  gap: 6px;
 }
 
 .table-footer {
@@ -1121,13 +1158,13 @@ onMounted(async () => {
   justify-content: space-between;
   align-items: center;
   gap: 12px;
-  padding: 20px 22px 22px;
-  border-top: 1px solid rgba(148, 163, 184, 0.14);
+  padding: 14px 20px;
+  border-top: 1px solid var(--border-color);
 }
 
 .footer-note {
-  color: #94a3b8;
-  font-size: 13px;
+  color: var(--text-muted);
+  font-size: var(--fs-xs);
 }
 
 .drawer-header {
@@ -1138,11 +1175,24 @@ onMounted(async () => {
   width: 100%;
 
   h3 {
-    margin: 10px 0 0;
-    color: #0f172a;
-    font-size: 24px;
-    line-height: 1.2;
+    margin: 8px 0 0;
+    color: var(--text-primary);
+    font-size: var(--fs-lg);
+    font-weight: 600;
+    line-height: 1.3;
   }
+}
+
+.drawer-eyebrow {
+  display: inline-block;
+  padding: 2px 8px;
+  border-radius: var(--radius-xs);
+  background: var(--gray-100);
+  color: var(--gray-600);
+  font-size: var(--fs-xs);
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
 }
 
 .drawer-body {
@@ -1152,121 +1202,142 @@ onMounted(async () => {
 .drawer-content {
   display: flex;
   flex-direction: column;
-  gap: 16px;
+  gap: 12px;
 }
 
 .drawer-hero {
   display: flex;
   flex-direction: column;
-  gap: 14px;
-  padding: 20px;
-  border-radius: 24px;
-  background:
-    radial-gradient(circle at top right, rgba(59, 130, 246, 0.14), transparent 30%),
-    linear-gradient(180deg, #f8fbff 0%, #f6f9fe 100%);
-  border: 1px solid rgba(59, 130, 246, 0.1);
+  gap: 12px;
+  padding: 16px;
+  border-radius: var(--radius-sm);
+  background: var(--gray-50);
+  border: 1px solid var(--border-color);
 }
 
 .drawer-type-row {
   display: flex;
   flex-wrap: wrap;
   align-items: center;
-  gap: 10px;
-  color: #475569;
-  font-size: 13px;
+  gap: 8px;
+  color: var(--gray-600);
+  font-size: var(--fs-xs);
+}
+
+.type-sep {
+  &::before {
+    content: '·';
+    margin-right: 8px;
+    color: var(--gray-300);
+  }
 }
 
 .drawer-hero-main p,
 .suggestion-panel p {
   margin: 0;
-  color: #334155;
+  color: var(--gray-700);
+  font-size: var(--fs-sm);
   line-height: 1.8;
 }
 
 .drawer-metrics {
   display: grid;
   grid-template-columns: repeat(3, minmax(0, 1fr));
-  gap: 12px;
+  gap: 8px;
 }
 
 .drawer-metric-card {
   display: flex;
-  flex-direction: column;
+  align-items: center;
   gap: 10px;
-  padding: 16px;
-  border-radius: 20px;
-  background: #fff;
-  border: 1px solid rgba(15, 23, 42, 0.06);
-  box-shadow: 0 12px 24px rgba(15, 23, 42, 0.05);
+  padding: 12px;
+  border-radius: var(--radius-sm);
+  background: var(--card-bg);
+  border: 1px solid var(--border-color);
 
-  strong {
-    color: #0f172a;
-    font-size: 15px;
-    line-height: 1.5;
-  }
+  &.red { border-left: 3px solid var(--danger); }
+  &.green { border-left: 3px solid var(--success); }
+  &.amber { border-left: 3px solid var(--warning); }
+  &.blue { border-left: 3px solid var(--primary-dark); }
+  &.slate { border-left: 3px solid var(--gray-500); }
+}
 
-  span {
-    color: #64748b;
-    font-size: 12px;
-  }
+.dm-icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
+  border-radius: var(--radius-xs);
+  flex-shrink: 0;
 
-  &.red {
-    background: linear-gradient(180deg, #fff7f7 0%, #fff1f1 100%);
-  }
+  .red & { background: var(--danger-bg); color: var(--danger); }
+  .green & { background: var(--success-bg); color: var(--success); }
+  .amber & { background: var(--warning-bg); color: var(--warning); }
+  .blue & { background: var(--primary-bg); color: var(--primary-dark); }
+  .slate & { background: var(--gray-100); color: var(--gray-600); }
+}
 
-  &.green {
-    background: linear-gradient(180deg, #f4fff8 0%, #eefcf2 100%);
-  }
+.dm-body {
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+}
 
-  &.amber {
-    background: linear-gradient(180deg, #fffaf1 0%, #fff6e6 100%);
-  }
+.dm-value {
+  color: var(--text-primary);
+  font-size: var(--fs-base);
+  font-weight: 600;
+  line-height: 1.4;
+}
 
-  &.blue {
-    background: linear-gradient(180deg, #f5f9ff 0%, #eef5ff 100%);
-  }
-
-  &.slate {
-    background: linear-gradient(180deg, #f8fafc 0%, #f1f5f9 100%);
-  }
+.dm-label {
+  color: var(--text-muted);
+  font-size: var(--fs-xs);
 }
 
 .detail-panel {
-  padding: 18px 20px;
-  border-radius: 22px;
-  background: #fff;
-  border: 1px solid rgba(15, 23, 42, 0.06);
-  box-shadow: 0 12px 24px rgba(15, 23, 42, 0.04);
+  padding: 14px 16px;
+  border-radius: var(--radius-sm);
+  background: var(--card-bg);
+  border: 1px solid var(--border-color);
 }
 
 .panel-title {
   display: flex;
   align-items: center;
-  gap: 8px;
-  margin-bottom: 14px;
-  color: #0f172a;
+  gap: 6px;
+  margin-bottom: 12px;
+  color: var(--gray-800);
+  font-size: var(--fs-sm);
   font-weight: 600;
+
+  .el-icon {
+    color: var(--text-muted);
+  }
 }
 
 .detail-grid {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 14px 12px;
+  gap: 10px 16px;
 }
 
 .detail-item {
   display: flex;
   flex-direction: column;
-  gap: 6px;
+  gap: 3px;
 
   label {
-    color: #94a3b8;
-    font-size: 12px;
+    color: var(--text-muted);
+    font-size: var(--fs-xs);
+    text-transform: uppercase;
+    letter-spacing: 0.03em;
   }
 
   span {
-    color: #0f172a;
-    font-size: 14px;
+    color: var(--gray-800);
+    font-size: var(--fs-sm);
     line-height: 1.5;
   }
 }
@@ -1274,118 +1345,186 @@ onMounted(async () => {
 .assignment-form {
   display: grid;
   grid-template-columns: minmax(0, 1fr) auto;
-  gap: 10px;
+  gap: 8px;
+}
+
+.explain-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+}
+
+.explain-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  gap: 12px;
+  padding: 8px 0;
+  border-bottom: 1px solid var(--border-light);
+
+  &:last-child {
+    border-bottom: none;
+    padding-bottom: 0;
+  }
+
+  &:first-child {
+    padding-top: 0;
+  }
+}
+
+.explain-key {
+  color: var(--gray-600);
+  font-size: var(--fs-xs);
+  font-weight: 500;
+  white-space: nowrap;
+}
+
+.explain-val {
+  color: var(--gray-800);
+  font-size: var(--fs-xs);
+  text-align: right;
+  line-height: 1.5;
 }
 
 .activity-list {
   display: flex;
   flex-direction: column;
-  gap: 10px;
+  gap: 0;
 }
 
-.activity-item {
+.activity-row {
   display: flex;
-  flex-direction: column;
-  gap: 6px;
-  padding: 14px 16px;
-  border-radius: 16px;
-  background: linear-gradient(180deg, #f8fafc 0%, #f1f5f9 100%);
+  justify-content: space-between;
+  align-items: baseline;
+  gap: 12px;
+  padding: 8px 0;
+  border-bottom: 1px solid var(--border-light);
 
-  strong {
-    color: #0f172a;
-    font-size: 14px;
-    line-height: 1.5;
+  &:last-child {
+    border-bottom: none;
+    padding-bottom: 0;
   }
 
-  span {
-    color: #64748b;
-    font-size: 12px;
+  &:first-child {
+    padding-top: 0;
   }
+}
+
+.activity-detail {
+  color: var(--gray-800);
+  font-size: var(--fs-xs);
+  font-weight: 500;
+}
+
+.activity-meta {
+  color: var(--text-muted);
+  font-size: var(--fs-xs);
+  white-space: nowrap;
 }
 
 .timeline-track {
   display: flex;
   flex-direction: column;
-  gap: 12px;
+  gap: 0;
 }
 
 .timeline-node {
   position: relative;
   display: grid;
-  grid-template-columns: 18px minmax(0, 1fr);
-  gap: 12px;
+  grid-template-columns: 16px minmax(0, 1fr);
+  gap: 10px;
+  padding: 8px 0;
 
   &:not(:last-child)::after {
     content: '';
     position: absolute;
-    left: 8px;
-    top: 22px;
-    bottom: -12px;
-    width: 2px;
-    background: linear-gradient(180deg, rgba(59, 130, 246, 0.28), rgba(148, 163, 184, 0.18));
+    left: 7px;
+    top: 26px;
+    bottom: -8px;
+    width: 1px;
+    background: var(--gray-300);
   }
 }
 
 .timeline-dot {
-  width: 18px;
-  height: 18px;
+  width: 14px;
+  height: 14px;
   margin-top: 2px;
-  border-radius: 999px;
-  background: linear-gradient(180deg, #3b82f6 0%, #2563eb 100%);
-  box-shadow: 0 0 0 4px rgba(59, 130, 246, 0.12);
+  border-radius: 50%;
+  background: var(--gray-800);
+  border: 2px solid var(--gray-300);
 }
 
 .timeline-content {
   display: flex;
   flex-direction: column;
-  gap: 6px;
-  padding: 12px 14px;
-  border-radius: 16px;
-  background: linear-gradient(180deg, #f8fafc 0%, #f1f5f9 100%);
+  gap: 2px;
+  padding: 8px 12px;
+  border-radius: var(--radius-xs);
+  background: var(--gray-50);
+  border: 1px solid var(--border-light);
 
   strong {
-    color: #0f172a;
-    font-size: 14px;
+    color: var(--gray-800);
+    font-size: var(--fs-xs);
+    font-weight: 600;
   }
 
   span {
-    color: #475569;
-    font-size: 13px;
+    color: var(--gray-600);
+    font-size: var(--fs-xs);
     line-height: 1.6;
   }
 
   small {
-    color: #94a3b8;
-    font-size: 12px;
+    color: var(--text-muted);
+    font-size: var(--fs-xs);
   }
 }
 
 .drawer-actions {
   display: flex;
   justify-content: flex-end;
-  gap: 10px;
-  padding-bottom: 8px;
+  gap: 8px;
+  padding-top: 4px;
 }
 
 :deep(.el-input__wrapper),
 :deep(.el-select__wrapper) {
-  border-radius: 14px;
+  border-radius: var(--radius-xs);
   box-shadow: none;
-  min-height: 42px;
+  min-height: 36px;
+  border: 1px solid var(--border-color);
+  transition: border-color var(--transition-fast);
 }
 
 :deep(.el-button) {
-  border-radius: 14px;
+  border-radius: var(--radius-xs);
+  transition: all var(--transition-fast);
 }
 
 :deep(.alert-drawer .el-drawer__header) {
   margin-bottom: 0;
   padding-bottom: 8px;
+  border-bottom: 1px solid var(--border-color);
+}
+
+:deep(.el-tag) {
+  border-radius: var(--radius-xs);
+}
+
+:deep(.el-button--primary) {
+  --el-button-bg-color: var(--gray-800);
+  --el-button-border-color: var(--gray-800);
+  --el-button-hover-bg-color: var(--gray-700);
+  --el-button-hover-border-color: var(--gray-700);
+  --el-button-active-bg-color: var(--gray-900);
+  --el-button-active-border-color: var(--gray-900);
 }
 
 @media (max-width: 1380px) {
   .toolbar-left {
-    grid-template-columns: repeat(3, minmax(0, 1fr));
+    flex-wrap: wrap;
   }
 }
 
@@ -1398,10 +1537,6 @@ onMounted(async () => {
     flex-direction: column;
   }
 
-  .toolbar-left {
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-  }
-
   .drawer-metrics,
   .detail-grid {
     grid-template-columns: repeat(2, minmax(0, 1fr));
@@ -1409,9 +1544,14 @@ onMounted(async () => {
 }
 
 @media (max-width: 960px) {
-  .hero-section {
-    grid-template-columns: 1fr;
-    padding: 22px;
+  .page-header {
+    padding: 18px 20px;
+  }
+
+  .header-title-row {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 8px;
   }
 
   .metric-grid,
@@ -1422,7 +1562,11 @@ onMounted(async () => {
 
   .toolbar-left,
   .assignment-form {
-    grid-template-columns: 1fr;
+    flex-direction: column;
+  }
+
+  .toolbar-search {
+    min-width: 100%;
   }
 
   .toolbar-right,

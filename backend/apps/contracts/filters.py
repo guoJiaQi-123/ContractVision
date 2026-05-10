@@ -1,6 +1,8 @@
 import django_filters
+from django.db.models import Q
+from django.utils import timezone
 
-from .models import Contract
+from .models import Contract, PaymentPlan
 
 
 class ContractFilter(django_filters.FilterSet):
@@ -20,6 +22,7 @@ class ContractFilter(django_filters.FilterSet):
     sign_date_to = django_filters.DateFilter(field_name='sign_date', lookup_expr='lte')
     created_at_from = django_filters.DateTimeFilter(field_name='created_at', lookup_expr='gte')
     created_at_to = django_filters.DateTimeFilter(field_name='created_at', lookup_expr='lte')
+    has_overdue = django_filters.BooleanFilter(method='filter_has_overdue', label='存在逾期付款')
 
     class Meta:
         model = Contract
@@ -28,3 +31,13 @@ class ContractFilter(django_filters.FilterSet):
             'payment_status', 'delivery_status', 'region',
             'department', 'salesperson', 'product_type',
         ]
+
+    def filter_has_overdue(self, queryset, name, value):
+        if value:
+            today = timezone.now().date()
+            overdue_contract_ids = PaymentPlan.objects.filter(
+                Q(status__in=[PaymentPlan.Status.OVERDUE, PaymentPlan.Status.SEVERE_OVERDUE])
+                | Q(status=PaymentPlan.Status.PENDING, due_date__lt=today)
+            ).values_list('contract_id', flat=True)
+            return queryset.filter(id__in=overdue_contract_ids)
+        return queryset

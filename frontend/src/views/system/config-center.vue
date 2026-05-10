@@ -101,21 +101,27 @@ onMounted(() => {
 
 <template>
   <div class="config-page">
-    <div class="hero-card">
-      <div>
-        <div class="eyebrow">F037 - F040 / F033 / F039</div>
+    <section class="hero-card">
+      <div class="hero-main">
         <h1>模板与汇率中心</h1>
         <p>统一管理导入导出模板、多币种汇率、印花税规则与 PC / 移动驾驶舱模板。</p>
       </div>
-      <div class="hero-actions">
-        <el-button @click="templateDialogVisible = true">新建模板</el-button>
-        <el-button @click="rateDialogVisible = true">维护汇率</el-button>
-        <el-button type="primary" @click="dashboardDialogVisible = true">新增驾驶舱</el-button>
+      <div class="hero-side">
+        <div class="hero-status-card">
+          <span>当前模板</span>
+          <strong>{{ templates.length }} 份</strong>
+          <small>汇率 {{ currencyRates.length }} 条 · 税率 {{ stampTaxRules.length }} 条</small>
+        </div>
+        <div class="hero-actions">
+          <el-button @click="templateDialogVisible = true">新建模板</el-button>
+          <el-button @click="rateDialogVisible = true">维护汇率</el-button>
+          <el-button type="primary" @click="dashboardDialogVisible = true">新增驾驶舱</el-button>
+        </div>
       </div>
-    </div>
+    </section>
 
-    <el-row :gutter="16">
-      <el-col :xs="24" :xl="12">
+    <el-row :gutter="24">
+      <el-col :xs="24" :lg="12">
         <div class="panel">
           <div class="panel-header">
             <div>
@@ -134,7 +140,7 @@ onMounted(() => {
           </el-table>
         </div>
       </el-col>
-      <el-col :xs="24" :xl="12">
+      <el-col :xs="24" :lg="12">
         <div class="panel">
           <div class="panel-header">
             <div>
@@ -158,8 +164,8 @@ onMounted(() => {
       </el-col>
     </el-row>
 
-    <el-row :gutter="16">
-      <el-col :xs="24" :xl="12">
+    <el-row :gutter="24">
+      <el-col :xs="24" :lg="12">
         <div class="panel">
           <div class="panel-header">
             <div>
@@ -175,7 +181,7 @@ onMounted(() => {
           </el-table>
         </div>
       </el-col>
-      <el-col :xs="24" :xl="12">
+      <el-col :xs="24" :lg="12">
         <div class="panel">
           <div class="panel-header">
             <div>
@@ -272,73 +278,121 @@ onMounted(() => {
 .config-page {
   display: flex;
   flex-direction: column;
-  gap: 16px;
-}
-
-.hero-card,
-.panel {
-  background: #fff;
-  border-radius: 18px;
-  border: 1px solid rgba(15, 23, 42, 0.08);
-  box-shadow: 0 18px 40px rgba(15, 23, 42, 0.06);
+  gap: 24px;
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
 }
 
 .hero-card {
-  padding: 24px 28px;
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 16px;
+  background: var(--gray-800);
+  border: 1px solid var(--gray-700);
+  border-radius: var(--radius-lg);
+  color: var(--gray-50);
+  box-shadow: var(--shadow-sm);
+  display: grid;
+  grid-template-columns: minmax(0, 1.3fr) minmax(360px, 0.9fr);
+  gap: 24px;
+  padding: 24px;
 
   h1 {
-    margin: 8px 0;
-    font-size: 28px;
+    margin: 8px 0 12px;
+    font-size: var(--fs-xl);
+    font-weight: 600;
+    line-height: 1.2;
+    color: var(--gray-50);
   }
 
   p {
     margin: 0;
-    color: #64748b;
+    color: var(--gray-300);
+    line-height: 1.6;
+    font-size: var(--fs-base);
   }
 }
 
-.eyebrow {
-  color: #7c3aed;
-  font-size: 12px;
-  letter-spacing: 0.12em;
-  text-transform: uppercase;
+.hero-side {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  justify-content: center;
+}
+
+.hero-status-card {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  padding: 16px;
+  border-radius: var(--radius-md);
+  background: var(--gray-900);
+  border: 1px solid var(--gray-700);
+
+  span,
+  small {
+    color: var(--gray-300);
+    font-size: var(--fs-xs);
+  }
+
+  strong {
+    font-size: var(--fs-md);
+    font-weight: 600;
+    color: var(--gray-50);
+  }
 }
 
 .hero-actions {
   display: flex;
-  gap: 8px;
   flex-wrap: wrap;
+  gap: 8px;
 }
 
 .panel {
+  border-radius: var(--radius-lg);
   padding: 20px;
-  margin-bottom: 16px;
+  background: var(--card-bg);
+  border: 1px solid var(--border-color);
+  box-shadow: var(--shadow-xs);
 }
 
 .panel-header {
   display: flex;
-  justify-content: space-between;
   align-items: center;
+  justify-content: space-between;
   gap: 12px;
-  margin-bottom: 16px;
+  margin-bottom: 20px;
+  border-bottom: 1px solid var(--border-color);
+  padding-bottom: 12px;
 
   h3 {
     margin: 0 0 4px;
+    font-size: var(--fs-md);
+    font-weight: 600;
+    color: var(--text-primary);
   }
 
   p {
     margin: 0;
-    color: #64748b;
-    font-size: 13px;
+    color: var(--text-secondary);
+    font-size: var(--fs-sm);
   }
 }
 
+:deep(.el-button) {
+  border-radius: var(--radius-sm);
+  font-weight: 500;
+}
+
+:deep(.el-select__wrapper),
+:deep(.el-input__wrapper) {
+  border-radius: var(--radius-sm);
+  min-height: 32px;
+  box-shadow: 0 0 0 1px var(--border-color) inset;
+}
+
 @media (max-width: 960px) {
-  .hero-card,
+  .hero-card {
+    grid-template-columns: 1fr;
+  }
+
+  .hero-actions,
   .panel-header {
     flex-direction: column;
     align-items: stretch;
